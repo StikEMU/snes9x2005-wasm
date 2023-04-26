@@ -3,6 +3,8 @@
 #ifndef _seta_h
 #define _seta_h
 
+#include <stdbool.h>
+
 #include "port.h"
 
 #define ST_010 0x01

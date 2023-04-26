@@ -3,6 +3,8 @@
 #ifndef _DSP1_H_
 #define _DSP1_H_
 
+#include "dsp4.h"
+
 extern void (*SetDSP)(uint8_t, uint16_t);
 extern uint8_t(*GetDSP)(uint16_t);
 

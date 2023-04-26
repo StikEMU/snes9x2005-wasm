@@ -1,10 +1,5 @@
-snes9x2005 libretro core.
+A port of [snes9x2005](https://github.com/libretro/snes9x2005/) libretro core for wasm.
 
-A Super Nintendo emulator core using the libretro API.
+Snes9x is a Super Nintendo Entertainment System emulator.
 
-Based on:
-* Snes9x 1.43, by the Snes9x team (with research by the ZSNES folks, anomie,
-  zsKnight, etc.)
-* NDSSFC 1.06, by the Supercard team (porting to the MIPS processor)
-* BAGSFC, by BassAceGold (improving over NDSSFC)
-* CATSFC, by ShadauxCat and Nebuleon (improving over BAGSFC)
+Try it on [here](https://kazuki-4ys.github.io/web_apps/snes9x-2005-wasm/).

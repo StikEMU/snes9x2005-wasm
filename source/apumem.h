@@ -3,12 +3,10 @@
 #ifndef _apumemory_h_
 #define _apumemory_h_
 
-#include <retro_inline.h>
-
 extern uint8_t W4;
 extern uint8_t APUROM[64];
 
-static INLINE uint8_t S9xAPUGetByteZ(uint8_t Address)
+static uint8_t S9xAPUGetByteZ(uint8_t Address)
 {
    if (Address >= 0xf0 && IAPU.DirectPage == IAPU.RAM)
    {
@@ -34,7 +32,7 @@ static INLINE uint8_t S9xAPUGetByteZ(uint8_t Address)
    return IAPU.DirectPage [Address];
 }
 
-static INLINE void S9xAPUSetByteZ(uint8_t byte, uint8_t Address)
+static void S9xAPUSetByteZ(uint8_t byte, uint8_t Address)
 {
    if (Address >= 0xf0 && IAPU.DirectPage == IAPU.RAM)
    {
@@ -60,7 +58,7 @@ static INLINE void S9xAPUSetByteZ(uint8_t byte, uint8_t Address)
       IAPU.DirectPage [Address] = byte;
 }
 
-static INLINE uint8_t S9xAPUGetByte(uint32_t Address)
+static uint8_t S9xAPUGetByte(uint32_t Address)
 {
    bool zero;
    uint8_t t;
@@ -85,7 +83,7 @@ static INLINE uint8_t S9xAPUGetByte(uint32_t Address)
    return t;
 }
 
-static INLINE void S9xAPUSetByte(uint8_t byte, uint32_t Address)
+static void S9xAPUSetByte(uint8_t byte, uint32_t Address)
 {
    Address &= 0xffff;
 

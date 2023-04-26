@@ -126,7 +126,7 @@ static uint8_t ConvertTile(uint8_t* pCache, uint32_t TileAddr)
 
 #define PLOT_PIXEL(screen, pixel) (pixel)
 
-static INLINE void WRITE_4PIXELS16(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
+static void WRITE_4PIXELS16(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
 #if defined(__MIPSEL) && defined(__GNUC__) && !defined(NO_ASM)
 	uint16_t *Screen = (uint16_t *) GFX.S + Offset;
@@ -213,7 +213,7 @@ static INLINE void WRITE_4PIXELS16(int32_t Offset, uint8_t* Pixels, uint16_t* Sc
 #endif
 }
 
-static INLINE void WRITE_4PIXELS16_FLIPPED(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
+static void WRITE_4PIXELS16_FLIPPED(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
 #if defined(__MIPSEL) && defined(__GNUC__) && !defined(NO_ASM)
 	uint16_t *Screen = (uint16_t *) GFX.S + Offset;

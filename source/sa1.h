@@ -5,7 +5,6 @@
 
 #include "memmap.h"
 #include "cpuexec.h"
-#include <retro_inline.h>
 
 typedef struct
 {
@@ -94,7 +93,7 @@ void S9xFixSA1AfterSnapshotLoad(void);
 #define TIMER_IRQ_SOURCE    (1 << 6)
 #define DMA_IRQ_SOURCE      (1 << 5)
 
-static INLINE void S9xSA1UnpackStatus(void)
+static void S9xSA1UnpackStatus(void)
 {
    SA1._Zero = (SA1.Registers.PL & Zero) == 0;
    SA1._Negative = (SA1.Registers.PL & Negative);
@@ -102,13 +101,13 @@ static INLINE void S9xSA1UnpackStatus(void)
    SA1._Overflow = (SA1.Registers.PL & Overflow) >> 6;
 }
 
-static INLINE void S9xSA1PackStatus(void)
+static void S9xSA1PackStatus(void)
 {
    SA1.Registers.PL &= ~(Zero | Negative | Carry | Overflow);
    SA1.Registers.PL |= SA1._Carry | ((SA1._Zero == 0) << 1) | (SA1._Negative & 0x80) | (SA1._Overflow << 6);
 }
 
-static INLINE void S9xSA1FixCycles(void)
+static void S9xSA1FixCycles(void)
 {
    if (SA1CheckEmulation())
       SA1.S9xOpcodes = S9xSA1OpcodesE1;

@@ -11,7 +11,6 @@ typedef struct
 #include "ppu.h"
 #include "memmap.h"
 #include "65c816.h"
-#include <retro_inline.h>
 
 #define DO_HBLANK_CHECK_SFX() \
     if (CPU.Cycles >= CPU.NextEvent) \
@@ -41,6 +40,7 @@ typedef struct
 void S9xMainLoop(void);
 void S9xReset(void);
 void S9xSoftReset(void);
+void CommonS9xReset(void);
 void S9xDoHBlankProcessing_SFX(void);
 void S9xDoHBlankProcessing_NoSFX(void);
 void S9xClearIRQ(uint32_t source);
@@ -54,7 +54,7 @@ extern SOpcodes S9xOpcodesM0X0 [256];
 
 extern SICPU ICPU;
 
-static INLINE void S9xUnpackStatus(void)
+static void S9xUnpackStatus(void)
 {
    ICPU._Zero = (ICPU.Registers.PL & Zero) == 0;
    ICPU._Negative = (ICPU.Registers.PL & Negative);
@@ -62,20 +62,20 @@ static INLINE void S9xUnpackStatus(void)
    ICPU._Overflow = (ICPU.Registers.PL & Overflow) >> 6;
 }
 
-static INLINE void S9xPackStatus(void)
+static void S9xPackStatus(void)
 {
    ICPU.Registers.PL &= ~(Zero | Negative | Carry | Overflow);
    ICPU.Registers.PL |= ICPU._Carry | ((ICPU._Zero == 0) << 1) | (ICPU._Negative & 0x80) | (ICPU._Overflow << 6);
 }
 
-static INLINE void CLEAR_IRQ_SOURCE(uint32_t M)
+static void CLEAR_IRQ_SOURCE(uint32_t M)
 {
    CPU.IRQActive &= ~M;
    if (!CPU.IRQActive)
       CPU.Flags &= ~IRQ_PENDING_FLAG;
 }
 
-static INLINE void S9xFixCycles(void)
+static void S9xFixCycles(void)
 {
    if (CheckEmulation())
       ICPU.S9xOpcodes = S9xOpcodesE1;
@@ -95,7 +95,7 @@ static INLINE void S9xFixCycles(void)
    }
 }
 
-static INLINE void S9xReschedule(void)
+static void S9xReschedule(void)
 {
    uint8_t which;
    int32_t max;

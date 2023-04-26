@@ -16,6 +16,8 @@
 #include "obc1.h"
 
 extern FxInit_s SuperFX;
+bool overclock_cycles;
+int one_c, slow_one_c, two_c;
 
 void S9xResetSuperFX()
 {
@@ -67,7 +69,7 @@ void S9xResetCPU()
    S9xUnpackStatus();
 }
 
-static void CommonS9xReset()
+void CommonS9xReset()
 {
    if (Settings.SuperFX)
       S9xResetSuperFX();

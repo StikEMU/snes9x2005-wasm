@@ -5,8 +5,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-
-#include <libretro.h>
+#include <stdbool.h>
 
 #include "port.h"
 #include "65c816.h"

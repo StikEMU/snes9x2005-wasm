@@ -3,6 +3,11 @@
 #ifndef _DISPLAY_H_
 #define _DISPLAY_H_
 
+#include <stdbool.h>
+
+#include "my_types.h"
+#include "gfx.h"
+
 /* Routines the port specific code has to implement */
 uint32_t S9xReadJoypad(int32_t port);
 bool S9xReadMousePosition(int32_t which1_0_to_1, int32_t* x, int32_t* y, uint32_t* buttons);

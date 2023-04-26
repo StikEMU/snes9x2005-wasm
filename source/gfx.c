@@ -10,8 +10,6 @@
 #include "apu.h"
 #include "cheats.h"
 
-#include <retro_inline.h>
-
 #define M7 19
 
 void ComputeClipWindows(void);
@@ -36,7 +34,7 @@ extern SLineMatrixData LineMatrixData [240];
 
 extern uint8_t  Mode7Depths [2];
 
-extern bool reduce_sprite_flicker;
+bool reduce_sprite_flicker;
 
 #define CLIP_10_BIT_SIGNED(a) \
    ((a) & ((1 << 10) - 1)) + (((((a) & (1 << 13)) ^ (1 << 13)) - (1 << 13)) >> 3)
@@ -498,7 +496,7 @@ void S9xEndScreenRefresh(void)
       CPU.SRAMModified = false;
 }
 
-static INLINE void SelectTileRenderer(bool normal)
+static void SelectTileRenderer(bool normal)
 {
    if (normal)
    {

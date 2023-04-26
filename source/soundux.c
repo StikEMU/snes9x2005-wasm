@@ -6,8 +6,6 @@
 #include <string.h>
 #include <errno.h>
 
-#include <retro_inline.h>
-
 #include "snes9x.h"
 #include "soundux.h"
 #include "apu.h"
@@ -91,7 +89,7 @@ uint32_t KeyOffERate         [10];
  * benefits) */
 static int32_t MixOutputPrev[2];
 
-static INLINE uint8_t* S9xGetSampleAddress(int32_t sample_number)
+static uint8_t* S9xGetSampleAddress(int32_t sample_number)
 {
    uint32_t addr = (((APU.DSP[APU_DIR] << 8) + (sample_number << 2)) & 0xffff);
    return (IAPU.RAM + addr);
@@ -450,7 +448,7 @@ void DecodeBlock(Channel* ch)
    ch->block_pointer += 9;
 }
 
-static INLINE void MixStereo(int32_t sample_count)
+static void MixStereo(int32_t sample_count)
 {
    static int32_t wave[SOUND_BUFFER_SIZE];
 

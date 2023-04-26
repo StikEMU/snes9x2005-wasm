@@ -6,8 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <retro_inline.h>
-
 /* The FxChip Emulator's internal variables */
 FxRegs_s GSU; /* This will be initialized when loading a ROM */
 
@@ -29,7 +27,7 @@ void fx_updateRamBank(uint8_t Byte)
    GSU.pvRamBank = GSU.apvRamBank[Byte & 0x3];
 }
 
-static INLINE void fx_readRegisterSpaceForCheck(void)
+static void fx_readRegisterSpaceForCheck(void)
 {
    R15 = (uint32_t) READ_WORD(&GSU.pvRegisters[30]);
 }
@@ -139,7 +137,7 @@ void fx_computeScreenPointers(void)
    GSU.vPrevScreenHeight = GSU.vScreenHeight;
 }
 
-static INLINE void fx_writeRegisterSpaceAfterCheck(void)
+static void fx_writeRegisterSpaceAfterCheck(void)
 {
    WRITE_WORD(&GSU.pvRegisters[30], R15);
 }

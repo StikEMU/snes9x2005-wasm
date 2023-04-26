@@ -16,8 +16,6 @@
 #include "cpumacro.h"
 #include "apu.h"
 
-#include <retro_inline.h>
-
 /* ADC */
 static void Op69M1(void)
 {
@@ -2376,7 +2374,7 @@ static void Op0CM0(void)
 #endif
 
 #ifndef SA1_OPCODES
-static INLINE void CPUShutdown(void)
+static void CPUShutdown(void)
 {
    if (Settings.Shutdown && CPU.PC == CPU.WaitAddress)
    {
@@ -2407,7 +2405,7 @@ static INLINE void CPUShutdown(void)
    }
 }
 #else
-static INLINE void CPUShutdown(void)
+static void CPUShutdown(void)
 {
    if (Settings.Shutdown && CPU.PC == CPU.WaitAddress)
    {
@@ -2423,7 +2421,7 @@ static INLINE void CPUShutdown(void)
 #endif
 
 /* From the speed-hacks branch of CatSFC */
-static INLINE void ForceShutdown(void)
+static void ForceShutdown(void)
 {
 #ifndef SA1_OPCODES
    CPU.WaitAddress = NULL;

@@ -3,11 +3,11 @@
 #ifndef _GFX_H_
 #define _GFX_H_
 
+#include <stddef.h>
+
 #include "port.h"
 #include "ppu.h"
 #include "snes9x.h"
-
-#include <retro_inline.h>
 
 void S9xStartScreenRefresh(void);
 void S9xDrawScanLine(uint8_t Line);
@@ -19,6 +19,8 @@ void S9xBuildDirectColourMaps(void);
 
 bool S9xInitGFX(void);
 void S9xDeinitGFX(void);
+
+extern bool reduce_sprite_flicker;
 
 typedef struct
 {
@@ -149,7 +151,7 @@ extern uint8_t mul_brightness [16][32];
 #define SUB_SCREEN_DEPTH 0
 #define MAIN_SCREEN_DEPTH 32
 
-static INLINE uint16_t COLOR_ADD(uint16_t C1, uint16_t C2)
+static uint16_t COLOR_ADD(uint16_t C1, uint16_t C2)
 {
 #if defined(USE_OLD_COLOUR_OPS)
    /* Pre-1.60 colour operations */
@@ -191,7 +193,7 @@ static INLINE uint16_t COLOR_ADD(uint16_t C1, uint16_t C2)
                   ((C1) & RGB_LOW_BITS_MASK) - \
                   ((C2) & RGB_LOW_BITS_MASK))
 #else
-static INLINE uint16_t COLOR_SUB(uint16_t C1, uint16_t C2)
+static uint16_t COLOR_SUB(uint16_t C1, uint16_t C2)
 {
 	int rb1         = (C1 & (THIRD_COLOR_MASK | FIRST_COLOR_MASK)) | ((0x20 << 0) | (0x20 << RED_SHIFT_BITS));
 	int rb2         = C2 & (THIRD_COLOR_MASK | FIRST_COLOR_MASK);

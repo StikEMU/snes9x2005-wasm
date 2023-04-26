@@ -8,9 +8,9 @@
 #include <ctype.h>
 
 #ifndef LOAD_FROM_MEMORY
-#include <streams/file_stream.h>
 #endif
 
+#include "my_file_stream.h"
 #include "snes9x.h"
 #include "memmap.h"
 #include "cpuexec.h"
@@ -611,6 +611,66 @@ static uint32_t FileLoader(uint8_t* buffer, const char* filename, int32_t maxsiz
 }
 #endif
 
+static uint32_t FileLoaderFromBuffer(uint8_t* buffer, unsigned char *rom, unsigned int romLength, int32_t maxsize)
+{
+   RFILE* ROMFile = NULL;
+   int32_t len = 0;
+
+   char dir [_MAX_DIR + 1];
+   char name [_MAX_FNAME + 1];
+   char ext [_MAX_EXT + 1];
+   char fname [_MAX_PATH + 1];
+
+   uint32_t FileSize = 0;
+
+#ifdef _WIN32
+   /* memmove required: Overlapping addresses [Neb] */
+   memmove(&ext [0], &ext[1], 4);
+#endif
+
+   ROMFile = filestream_init_from_buffer(rom, romLength);
+
+   if (!ROMFile)
+      return 0;
+
+   Memory.HeaderCount = 0;
+   uint8_t* ptr = buffer;
+
+   {
+      int32_t calc_size;
+      FileSize = filestream_read(ROMFile, ptr, maxsize + 0x200 - (ptr - Memory.ROM));
+      filestream_close(ROMFile);
+      calc_size = FileSize & ~0x1FFF; /* round to the lower 0x2000 */
+
+      if ((FileSize - calc_size == 512 && !Settings.ForceNoHeader) 
+            || Settings.ForceHeader)
+      {
+         /* memmove required: Overlapping addresses [Neb] */
+         /* DS2 DMA notes: Can be split into 512-byte DMA blocks [Neb] */
+#ifdef DS2_DMA
+         __dcache_writeback_all();
+         {
+            uint32_t i;
+            for (i = 0; i < calc_size; i += 512)
+            {
+               ds2_DMAcopy_32Byte(2 /* channel: emu internal */, ptr + i, ptr + i + 512, 512);
+               ds2_DMA_wait(2);
+               ds2_DMA_stop(2);
+            }
+         }
+#else
+         memmove(ptr, ptr + 512, calc_size);
+#endif
+         Memory.HeaderCount++;
+         FileSize -= 512;
+      }
+
+      ptr           += FileSize;
+   }
+
+   return FileSize;
+}
+
 /**********************************************************************************************/
 /* LoadROM()                                                                                  */
 /* This function loads a Snes-Backup image                                                    */
@@ -668,6 +728,349 @@ again:
       return false; /* it ends here */
    CheckForIPSPatch(filename, Memory.HeaderCount != 0, &TotalFileSize);
 #endif
+   /* fix hacked games here. */
+   if ((strncmp("HONKAKUHA IGO GOSEI", (char*)&Memory.ROM[0x7FC0], 19) == 0) && (Memory.ROM[0x7FD5] != 0x31))
+   {
+      Memory.ROM[0x7FD5] = 0x31;
+      Memory.ROM[0x7FD6] = 0x02;
+   }
+
+#ifndef NO_SPEEDHACKS
+   /* SNESAdvance speed hacks (from the speed-hacks branch of CatSFC) */
+   if (strncmp("YOSHI'S ISLAND", (char *) &Memory.ROM[0x7FC0], 14) == 0)
+   {
+      Memory.ROM[0x0000F4] = 0x42;
+      Memory.ROM[0x0000F5] = 0x3B;
+   }
+   else if (strncmp("SUPER MARIOWORLD", (char *) &Memory.ROM[0x7FC0], 16) == 0)
+   {
+      Memory.ROM[0x00006D] = 0x42;
+   }
+   else if (strncmp("ALL_STARS + WORLD", (char *) &Memory.ROM[0x7FC0], 17) == 0)
+   {
+      Memory.ROM[0x0003D0] = 0x42;
+      Memory.ROM[0x0003D1] = 0x5B;
+      Memory.ROM[0x018522] = 0x42;
+      Memory.ROM[0x018523] = 0x5B;
+      Memory.ROM[0x02C804] = 0x42;
+      Memory.ROM[0x02C805] = 0xBA;
+      Memory.ROM[0x0683B5] = 0x42;
+      Memory.ROM[0x0683B6] = 0x5B;
+      Memory.ROM[0x0696AC] = 0x42;
+      Memory.ROM[0x0696AD] = 0xBA;
+      Memory.ROM[0x089233] = 0xDB;
+      Memory.ROM[0x089234] = 0x61;
+      Memory.ROM[0x0895DF] = 0x42;
+      Memory.ROM[0x0895E0] = 0x5B;
+      Memory.ROM[0x0A7A9D] = 0x42;
+      Memory.ROM[0x0A7A9E] = 0xBA;
+      Memory.ROM[0x1072E7] = 0x42;
+      Memory.ROM[0x1072E8] = 0xD9;
+      Memory.ROM[0x107355] = 0x42;
+      Memory.ROM[0x107356] = 0x5B;
+      Memory.ROM[0x1073CF] = 0x42;
+      Memory.ROM[0x1073D0] = 0x5B;
+      Memory.ROM[0x107443] = 0x42;
+      Memory.ROM[0x107444] = 0x5B;
+      Memory.ROM[0x107498] = 0x42;
+      Memory.ROM[0x107499] = 0x5B;
+      Memory.ROM[0x107505] = 0x42;
+      Memory.ROM[0x107506] = 0x5B;
+      Memory.ROM[0x107539] = 0x42;
+      Memory.ROM[0x10753A] = 0x5B;
+      Memory.ROM[0x107563] = 0x42;
+      Memory.ROM[0x107564] = 0x5B;
+      Memory.ROM[0x18041D] = 0x42;
+      Memory.ROM[0x18041E] = 0x79;
+   }
+#endif
+
+   hi_score = ScoreHiROM(true, 0);
+   lo_score = ScoreLoROM(true, 0);
+
+   if (Memory.HeaderCount == 0 && !Settings.ForceNoHeader && strncmp((char *) &Memory.ROM [0], "BANDAI SFC-ADX", 14) && ((hi_score > lo_score && ScoreHiROM(true, 0) > hi_score) || (hi_score <= lo_score && ScoreLoROM(true, 0) > lo_score)))
+   {
+#ifdef DS2_DMA
+      __dcache_writeback_all();
+      {
+         uint32_t i;
+         for (i = 0; i < TotalFileSize; i += 512)
+         {
+            ds2_DMAcopy_32Byte(2 /* channel: emu internal */, Memory.ROM + i, Memory.ROM + i + 512, 512);
+            ds2_DMA_wait(2);
+            ds2_DMA_stop(2);
+         }
+      }
+#else
+      /* memmove required: Overlapping addresses [Neb] */
+      memmove(Memory.ROM, Memory.ROM + 512, TotalFileSize - 512);
+#endif
+      TotalFileSize -= 512;
+   }
+
+   Memory.CalculatedSize = TotalFileSize & ~0x1FFF; /* round down to lower 0x2000 */
+   memset(Memory.ROM + Memory.CalculatedSize, 0, MAX_ROM_SIZE - Memory.CalculatedSize);
+
+   if (Memory.CalculatedSize > 0x400000 &&
+         !(Memory.ROM[0x7FD5] == 0x32 && ((Memory.ROM[0x7FD6] & 0xF0) == 0x40)) && /* exclude S-DD1 */
+         !(Memory.ROM[0xFFD5] == 0x3A && ((Memory.ROM[0xFFD6] & 0xF0) == 0xF0))) /* exclude SPC7110 */
+      Memory.ExtendedFormat = YEAH; /* you might be a Jumbo! */
+
+   /* If both vectors are invalid, it's type 1 LoROM */
+
+   if(Memory.ExtendedFormat == NOPE && strncmp((char *) &Memory.ROM[0], "BANDAI SFC-ADX", 14) && ((Memory.ROM[0x7ffc] | (Memory.ROM[0x7ffd] << 8)) < 0x8000) && ((Memory.ROM[0xfffc] | (Memory.ROM[0xFffd] << 8)) < 0x8000) && !Settings.ForceInterleaved)
+     S9xDeinterleaveType1(TotalFileSize, Memory.ROM);
+
+   /* CalculatedSize is now set, so rescore */
+   hi_score = ScoreHiROM(false, 0);
+   lo_score = ScoreLoROM(false, 0);
+
+   if (Memory.ExtendedFormat != NOPE)
+   {
+      int32_t loromscore, hiromscore, swappedlorom, swappedhirom;
+      loromscore = ScoreLoROM(false, 0);
+      hiromscore = ScoreHiROM(false, 0);
+      swappedlorom = ScoreLoROM(false, 0x400000);
+      swappedhirom = ScoreHiROM(false, 0x400000);
+
+      /* set swapped here. */
+      if (MAX(swappedlorom, swappedhirom) >= MAX(loromscore, hiromscore))
+      {
+         Memory.ExtendedFormat = BIGFIRST;
+         hi_score = swappedhirom;
+         lo_score = swappedlorom;
+         RomHeader = Memory.ROM + 0x400000;
+      }
+      else
+      {
+         Memory.ExtendedFormat = SMALLFIRST;
+         lo_score = loromscore;
+         hi_score = hiromscore;
+         RomHeader = Memory.ROM;
+      }
+   }
+
+   Interleaved = Settings.ForceInterleaved || Settings.ForceInterleaved2;
+   if (Settings.ForceLoROM || (!Settings.ForceHiROM && lo_score >= hi_score))
+   {
+      Memory.LoROM = true;
+      Memory.HiROM = false;
+
+      /* Ignore map type byte if not 0x2x or 0x3x */
+      if ((RomHeader [0x7fd5] & 0xf0) == 0x20 || (RomHeader [0x7fd5] & 0xf0) == 0x30)
+      {
+         switch (RomHeader [0x7fd5] & 0xf)
+         {
+         case 1:
+            Interleaved = true;
+            break;
+         case 5:
+            Interleaved = true;
+            Tales = true;
+            break;
+         }
+      }
+   }
+   else
+   {
+      if ((RomHeader [0xffd5] & 0xf0) == 0x20 || (RomHeader [0xffd5] & 0xf0) == 0x30)
+      {
+         switch (RomHeader [0xffd5] & 0xf)
+         {
+         case 0:
+         case 3:
+            Interleaved = true;
+            break;
+         }
+      }
+      Memory.LoROM = false;
+      Memory.HiROM = true;
+   }
+
+   /* More */
+   if (!Settings.ForceHiROM &&
+       !Settings.ForceLoROM &&
+       !Settings.ForceInterleaved &&
+       !Settings.ForceInterleaved2 &&
+       !Settings.ForceNotInterleaved &&
+       !Settings.ForceSuperFX &&
+       !Settings.ForceNoSuperFX &&
+       !Settings.ForceDSP1 &&
+       !Settings.ForceNoDSP1 &&
+       !Settings.ForceSA1 &&
+       !Settings.ForceNoSA1 &&
+       !Settings.ForceC4 &&
+       !Settings.ForceNoC4 &&
+       !Settings.ForceSDD1 &&
+       !Settings.ForceNoSDD1)
+   {
+      /* スーファミターボ BIOS読み込み */
+      if ((strncmp((char*) &Memory.ROM [0], "BANDAI SFC-ADX", 14) == 0) && !(strncmp((char*) &Memory.ROM [0x10], "SFC-ADX BACKUP", 14) == 0))
+      {
+         Memory.LoROM = true;
+         Memory.HiROM = false;
+         Interleaved = false;
+         Tales = false;
+      }
+      else if (strncmp ((char *) &Memory.ROM [0x7fc0], "YUYU NO QUIZ DE GO!GO!", 22) == 0 || strncmp ((char *) &Memory.ROM [0x7fc0], "SP MOMOTAROU DENTETSU2", 22) == 0 || strncmp ((char *) &Memory.ROM [0x7fc0], "SUPER FORMATION SOCCE", 21) == 0)
+      {
+         Memory.LoROM = true;
+         Memory.HiROM = false;
+         Interleaved = false;
+      }
+      /* BS Zooっと麻雀 */
+      else if ((strncmp ((char *) &Memory.ROM [0xffc0], "Ｚｏｏっと麻雀！", 16) == 0)|| (strncmp ((char *) &Memory.ROM [0xffc0], "Zooっと麻雀!IVT", 15) == 0))
+      {
+         Memory.LoROM = false;
+         Memory.HiROM = true;
+      }
+      /* 再BS探偵倶楽部 */
+      else if (strncmp ((char *) &Memory.ROM [0xffc0], "再BS探偵倶楽部", 14) == 0)
+      {
+         Memory.LoROM = false;
+         Memory.HiROM = true;
+      }
+      /* BATMAN--REVENGE JOKER (USA) */
+      else if (strncmp ((char *) &Memory.ROM [0xffc0], "BATMAN--REVENGE JOKER", 21) == 0)
+      {
+         Memory.LoROM = true;
+         Memory.HiROM = false;
+         Interleaved = true;
+      }
+      /* THE DUEL: TEST DRIVE */
+      else if (strncmp ((char *) &Memory.ROM [0x7fc0], "THE DUEL: TEST DRIVE", 20) == 0)
+      {
+         Memory.LoROM = true;
+         Memory.HiROM = false;
+         Interleaved = false;
+      }
+      /* ポパイ いじわる魔女シーハッグの巻 */
+      else if (strncmp ((char *) &Memory.ROM [0x7fc0], "POPEYE IJIWARU MAJO", 19) == 0)
+      {
+         Memory.LoROM = true;
+         Memory.HiROM = false;
+         Interleaved = false;
+      }
+      /* Pop'nツインビー サンプル版 */
+      else if(strncmp ((char *) &Memory.ROM [0x7fc0], "POPN TWINBEE", 12) == 0)
+      {
+         Memory.LoROM = true;
+         Memory.HiROM = false;
+         Interleaved = false;
+      }
+      /* Mario Early Years: Fun with Numbers */
+      else if ((strncmp ((char *) &Memory.ROM [0x7fc0], "MEY Fun with Numbers", 20) == 0))
+      {
+         int32_t i;
+         for (i = 0x87fc0; i < 0x87fe0; i++)
+            Memory.ROM [i] = 0;
+      }
+      else if(Memory.CalculatedSize == 0x100000 && strncmp ((char *) &Memory.ROM [0xffc0], "WWF SUPER WRESTLEMANIA", 22) == 0)
+      {
+         int32_t cvcount;
+         memcpy(&Memory.ROM[0x100000], Memory.ROM, 0x100000);
+         for(cvcount = 0; cvcount < 16; cvcount++)
+         {
+            memcpy(&Memory.ROM[0x8000 * cvcount], &Memory.ROM[0x10000 * cvcount + 0x100000 + 0x8000], 0x8000);
+            memcpy(&Memory.ROM[0x8000 * cvcount + 0x80000], &Memory.ROM[0x10000 * cvcount + 0x100000], 0x8000);
+         }
+         Memory.LoROM = true;
+         Memory.HiROM = false;
+         memset(&Memory.ROM[Memory.CalculatedSize], 0, MAX_ROM_SIZE - Memory.CalculatedSize);
+      }
+   }
+
+   if (!Settings.ForceNotInterleaved && Interleaved)
+   {
+      CPU.TriedInterleavedMode2 = true;
+
+      if (Tales)
+      {
+         if (Memory.ExtendedFormat == BIGFIRST)
+         {
+            S9xDeinterleaveType1(0x400000, Memory.ROM);
+            S9xDeinterleaveType1(Memory.CalculatedSize - 0x400000, Memory.ROM + 0x400000);
+         }
+         else
+         {
+            S9xDeinterleaveType1(Memory.CalculatedSize - 0x400000, Memory.ROM);
+            S9xDeinterleaveType1(0x400000, Memory.ROM + Memory.CalculatedSize - 0x400000);
+         }
+
+         Memory.LoROM = false;
+         Memory.HiROM = true;
+      }
+      else if (Settings.ForceInterleaved2)
+         S9xDeinterleaveType2(false);
+      else if (Memory.CalculatedSize == 0x300000)
+      {
+         bool t = Memory.LoROM;
+
+         Memory.LoROM = Memory.HiROM;
+         Memory.HiROM = t;
+         S9xDeinterleaveGD24(Memory.CalculatedSize, Memory.ROM);
+      }
+      else
+      {
+         bool t = Memory.LoROM;
+
+         Memory.LoROM = Memory.HiROM;
+         Memory.HiROM = t;
+
+         S9xDeinterleaveType1(Memory.CalculatedSize, Memory.ROM);
+      }
+
+      hi_score = ScoreHiROM(false, 0);
+      lo_score = ScoreLoROM(false, 0);
+
+      if ((Memory.HiROM && (lo_score >= hi_score || hi_score < 0)) || (Memory.LoROM && (hi_score > lo_score || lo_score < 0)))
+      {
+         if (retry_count == 0)
+         {
+            Settings.ForceNotInterleaved = true;
+            Settings.ForceInterleaved = false;
+            retry_count++;
+            goto again;
+         }
+      }
+   }
+
+   if (Memory.ExtendedFormat == SMALLFIRST)
+      Tales = true;
+
+   InitROM(Tales);
+   S9xInitCheatData();
+   S9xApplyCheats();
+   S9xReset();
+   return true;
+}
+
+bool LoadROMFromBuffer(unsigned char *rom, unsigned int romLength)
+{
+   int32_t hi_score, lo_score;
+   int32_t TotalFileSize = 0;
+   bool Interleaved = false;
+   bool Tales = false;
+   const uint8_t* src;
+
+   uint8_t* RomHeader = Memory.ROM;
+   Memory.ExtendedFormat = NOPE;
+
+   Del7110Gfx();
+
+   memset(bytes0x2000, 0, 0x2000);
+   CPU.TriedInterleavedMode2 = false;
+
+   Memory.CalculatedSize = 0;
+   retry_count = 0;
+
+again:
+
+   TotalFileSize = FileLoaderFromBuffer(Memory.ROM, rom, romLength, MAX_ROM_SIZE);
+
+   if (!TotalFileSize)
+      return false; /* it ends here */
+   //CheckForIPSPatch(filename, Memory.HeaderCount != 0, &TotalFileSize);
    /* fix hacked games here. */
    if ((strncmp("HONKAKUHA IGO GOSEI", (char*)&Memory.ROM[0x7FC0], 19) == 0) && (Memory.ROM[0x7FD5] != 0x31))
    {

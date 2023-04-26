@@ -4,8 +4,6 @@
 #include "fxinst.h"
 #include <string.h>
 
-#include <retro_inline.h>
-
 extern FxRegs_s GSU;
 
 /* Codes used:
@@ -19,7 +17,7 @@ extern FxRegs_s GSU;
  */
 
 /* 00 - stop - stop GSU execution (and maybe generate an IRQ) */
-static INLINE void fx_stop(void)
+static void fx_stop(void)
 {
    CF(G);
    GSU.vCounter = 0;
@@ -36,7 +34,7 @@ static INLINE void fx_stop(void)
 }
 
 /* 01 - nop - no operation */
-static INLINE void fx_nop(void)
+static void fx_nop(void)
 {
    CLRFLAGS;
    R15++;
@@ -45,7 +43,7 @@ static INLINE void fx_nop(void)
 extern void fx_flushCache(void);
 
 /* 02 - cache - reintialize GSU cache */
-static INLINE void fx_cache(void)
+static void fx_cache(void)
 {
    uint32_t c = R15 & 0xfff0;
    if (GSU.vCacheBaseReg != c || !GSU.bCacheActive)
@@ -59,7 +57,7 @@ static INLINE void fx_cache(void)
 }
 
 /* 03 - lsr - logic shift right */
-static INLINE void fx_lsr(void)
+static void fx_lsr(void)
 {
    uint32_t v;
    GSU.vCarry = SREG & 1;
@@ -73,7 +71,7 @@ static INLINE void fx_lsr(void)
 }
 
 /* 04 - rol - rotate left */
-static INLINE void fx_rol(void)
+static void fx_rol(void)
 {
    uint32_t v = USEX16((SREG << 1) + GSU.vCarry);
    GSU.vCarry = (SREG >> 15) & 1;
@@ -86,7 +84,7 @@ static INLINE void fx_rol(void)
 }
 
 /* 05 - bra - branch always */
-static INLINE void fx_bra(void)
+static void fx_bra(void)
 {
    uint8_t v = PIPE;
    R15++;
@@ -110,61 +108,61 @@ static INLINE void fx_bra(void)
 #define TEST_CY (GSU.vCarry & 1)
 
 /* 06 - blt - branch on less than */
-static INLINE void fx_blt(void)
+static void fx_blt(void)
 {
    BRA_COND((TEST_S != 0) != (TEST_OV != 0));
 }
 
 /* 07 - bge - branch on greater or equals */
-static INLINE void fx_bge(void)
+static void fx_bge(void)
 {
    BRA_COND((TEST_S != 0) == (TEST_OV != 0));
 }
 
 /* 08 - bne - branch on not equal */
-static INLINE void fx_bne(void)
+static void fx_bne(void)
 {
    BRA_COND(!TEST_Z);
 }
 
 /* 09 - beq - branch on equal */
-static INLINE void fx_beq(void)
+static void fx_beq(void)
 {
    BRA_COND(TEST_Z);
 }
 
 /* 0a - bpl - branch on plus */
-static INLINE void fx_bpl(void)
+static void fx_bpl(void)
 {
    BRA_COND(!TEST_S);
 }
 
 /* 0b - bmi - branch on minus */
-static INLINE void fx_bmi(void)
+static void fx_bmi(void)
 {
    BRA_COND(TEST_S);
 }
 
 /* 0c - bcc - branch on carry clear */
-static INLINE void fx_bcc(void)
+static void fx_bcc(void)
 {
    BRA_COND(!TEST_CY);
 }
 
 /* 0d - bcs - branch on carry set */
-static INLINE void fx_bcs(void)
+static void fx_bcs(void)
 {
    BRA_COND(TEST_CY);
 }
 
 /* 0e - bvc - branch on overflow clear */
-static INLINE void fx_bvc(void)
+static void fx_bvc(void)
 {
    BRA_COND(!TEST_OV);
 }
 
 /* 0f - bvs - branch on overflow set */
-static INLINE void fx_bvs(void)
+static void fx_bvs(void)
 {
    BRA_COND(TEST_OV);
 }
@@ -204,67 +202,67 @@ static INLINE void fx_bvs(void)
         R15++; \
     }
 
-static INLINE void fx_to_r0(void)
+static void fx_to_r0(void)
 {
    FX_TO(0);
 }
-static INLINE void fx_to_r1(void)
+static void fx_to_r1(void)
 {
    FX_TO(1);
 }
-static INLINE void fx_to_r2(void)
+static void fx_to_r2(void)
 {
    FX_TO(2);
 }
-static INLINE void fx_to_r3(void)
+static void fx_to_r3(void)
 {
    FX_TO(3);
 }
-static INLINE void fx_to_r4(void)
+static void fx_to_r4(void)
 {
    FX_TO(4);
 }
-static INLINE void fx_to_r5(void)
+static void fx_to_r5(void)
 {
    FX_TO(5);
 }
-static INLINE void fx_to_r6(void)
+static void fx_to_r6(void)
 {
    FX_TO(6);
 }
-static INLINE void fx_to_r7(void)
+static void fx_to_r7(void)
 {
    FX_TO(7);
 }
-static INLINE void fx_to_r8(void)
+static void fx_to_r8(void)
 {
    FX_TO(8);
 }
-static INLINE void fx_to_r9(void)
+static void fx_to_r9(void)
 {
    FX_TO(9);
 }
-static INLINE void fx_to_r10(void)
+static void fx_to_r10(void)
 {
    FX_TO(10);
 }
-static INLINE void fx_to_r11(void)
+static void fx_to_r11(void)
 {
    FX_TO(11);
 }
-static INLINE void fx_to_r12(void)
+static void fx_to_r12(void)
 {
    FX_TO(12);
 }
-static INLINE void fx_to_r13(void)
+static void fx_to_r13(void)
 {
    FX_TO(13);
 }
-static INLINE void fx_to_r14(void)
+static void fx_to_r14(void)
 {
    FX_TO_R14(14);
 }
-static INLINE void fx_to_r15(void)
+static void fx_to_r15(void)
 {
    FX_TO_R15(15);
 }
@@ -275,67 +273,67 @@ static INLINE void fx_to_r15(void)
     GSU.pvSreg = GSU.pvDreg = &GSU.avReg[reg]; \
     R15++
 
-static INLINE void fx_with_r0(void)
+static void fx_with_r0(void)
 {
    FX_WITH(0);
 }
-static INLINE void fx_with_r1(void)
+static void fx_with_r1(void)
 {
    FX_WITH(1);
 }
-static INLINE void fx_with_r2(void)
+static void fx_with_r2(void)
 {
    FX_WITH(2);
 }
-static INLINE void fx_with_r3(void)
+static void fx_with_r3(void)
 {
    FX_WITH(3);
 }
-static INLINE void fx_with_r4(void)
+static void fx_with_r4(void)
 {
    FX_WITH(4);
 }
-static INLINE void fx_with_r5(void)
+static void fx_with_r5(void)
 {
    FX_WITH(5);
 }
-static INLINE void fx_with_r6(void)
+static void fx_with_r6(void)
 {
    FX_WITH(6);
 }
-static INLINE void fx_with_r7(void)
+static void fx_with_r7(void)
 {
    FX_WITH(7);
 }
-static INLINE void fx_with_r8(void)
+static void fx_with_r8(void)
 {
    FX_WITH(8);
 }
-static INLINE void fx_with_r9(void)
+static void fx_with_r9(void)
 {
    FX_WITH(9);
 }
-static INLINE void fx_with_r10(void)
+static void fx_with_r10(void)
 {
    FX_WITH(10);
 }
-static INLINE void fx_with_r11(void)
+static void fx_with_r11(void)
 {
    FX_WITH(11);
 }
-static INLINE void fx_with_r12(void)
+static void fx_with_r12(void)
 {
    FX_WITH(12);
 }
-static INLINE void fx_with_r13(void)
+static void fx_with_r13(void)
 {
    FX_WITH(13);
 }
-static INLINE void fx_with_r14(void)
+static void fx_with_r14(void)
 {
    FX_WITH(14);
 }
-static INLINE void fx_with_r15(void)
+static void fx_with_r15(void)
 {
    FX_WITH(15);
 }
@@ -348,51 +346,51 @@ static INLINE void fx_with_r15(void)
     CLRFLAGS; \
     R15++
 
-static INLINE void fx_stw_r0(void)
+static void fx_stw_r0(void)
 {
    FX_STW(0);
 }
-static INLINE void fx_stw_r1(void)
+static void fx_stw_r1(void)
 {
    FX_STW(1);
 }
-static INLINE void fx_stw_r2(void)
+static void fx_stw_r2(void)
 {
    FX_STW(2);
 }
-static INLINE void fx_stw_r3(void)
+static void fx_stw_r3(void)
 {
    FX_STW(3);
 }
-static INLINE void fx_stw_r4(void)
+static void fx_stw_r4(void)
 {
    FX_STW(4);
 }
-static INLINE void fx_stw_r5(void)
+static void fx_stw_r5(void)
 {
    FX_STW(5);
 }
-static INLINE void fx_stw_r6(void)
+static void fx_stw_r6(void)
 {
    FX_STW(6);
 }
-static INLINE void fx_stw_r7(void)
+static void fx_stw_r7(void)
 {
    FX_STW(7);
 }
-static INLINE void fx_stw_r8(void)
+static void fx_stw_r8(void)
 {
    FX_STW(8);
 }
-static INLINE void fx_stw_r9(void)
+static void fx_stw_r9(void)
 {
    FX_STW(9);
 }
-static INLINE void fx_stw_r10(void)
+static void fx_stw_r10(void)
 {
    FX_STW(10);
 }
-static INLINE void fx_stw_r11(void)
+static void fx_stw_r11(void)
 {
    FX_STW(11);
 }
@@ -404,57 +402,57 @@ static INLINE void fx_stw_r11(void)
     CLRFLAGS; \
     R15++
 
-static INLINE void fx_stb_r0(void)
+static void fx_stb_r0(void)
 {
    FX_STB(0);
 }
-static INLINE void fx_stb_r1(void)
+static void fx_stb_r1(void)
 {
    FX_STB(1);
 }
-static INLINE void fx_stb_r2(void)
+static void fx_stb_r2(void)
 {
    FX_STB(2);
 }
-static INLINE void fx_stb_r3(void)
+static void fx_stb_r3(void)
 {
    FX_STB(3);
 }
-static INLINE void fx_stb_r4(void)
+static void fx_stb_r4(void)
 {
    FX_STB(4);
 }
-static INLINE void fx_stb_r5(void)
+static void fx_stb_r5(void)
 {
    FX_STB(5);
 }
-static INLINE void fx_stb_r6(void)
+static void fx_stb_r6(void)
 {
    FX_STB(6);
 }
-static INLINE void fx_stb_r7(void)
+static void fx_stb_r7(void)
 {
    FX_STB(7);
 }
-static INLINE void fx_stb_r8(void)
+static void fx_stb_r8(void)
 {
    FX_STB(8);
 }
-static INLINE void fx_stb_r9(void)
+static void fx_stb_r9(void)
 {
    FX_STB(9);
 }
-static INLINE void fx_stb_r10(void)
+static void fx_stb_r10(void)
 {
    FX_STB(10);
 }
-static INLINE void fx_stb_r11(void)
+static void fx_stb_r11(void)
 {
    FX_STB(11);
 }
 
 /* 3c - loop - decrement loop counter, and branch on not zero */
-static INLINE void fx_loop(void)
+static void fx_loop(void)
 {
    GSU.vSign = GSU.vZero = --R12;
    if ((uint16_t) R12 != 0)
@@ -465,7 +463,7 @@ static INLINE void fx_loop(void)
 }
 
 /* 3d - alt1 - set alt1 mode */
-static INLINE void fx_alt1(void)
+static void fx_alt1(void)
 {
    SF(ALT1);
    CF(B);
@@ -473,7 +471,7 @@ static INLINE void fx_alt1(void)
 }
 
 /* 3e - alt2 - set alt2 mode */
-static INLINE void fx_alt2(void)
+static void fx_alt2(void)
 {
    SF(ALT2);
    CF(B);
@@ -481,7 +479,7 @@ static INLINE void fx_alt2(void)
 }
 
 /* 3f - alt3 - set alt3 mode */
-static INLINE void fx_alt3(void)
+static void fx_alt3(void)
 {
    SF(ALT1);
    SF(ALT2);
@@ -500,51 +498,51 @@ static INLINE void fx_alt3(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_ldw_r0(void)
+static void fx_ldw_r0(void)
 {
    FX_LDW(0);
 }
-static INLINE void fx_ldw_r1(void)
+static void fx_ldw_r1(void)
 {
    FX_LDW(1);
 }
-static INLINE void fx_ldw_r2(void)
+static void fx_ldw_r2(void)
 {
    FX_LDW(2);
 }
-static INLINE void fx_ldw_r3(void)
+static void fx_ldw_r3(void)
 {
    FX_LDW(3);
 }
-static INLINE void fx_ldw_r4(void)
+static void fx_ldw_r4(void)
 {
    FX_LDW(4);
 }
-static INLINE void fx_ldw_r5(void)
+static void fx_ldw_r5(void)
 {
    FX_LDW(5);
 }
-static INLINE void fx_ldw_r6(void)
+static void fx_ldw_r6(void)
 {
    FX_LDW(6);
 }
-static INLINE void fx_ldw_r7(void)
+static void fx_ldw_r7(void)
 {
    FX_LDW(7);
 }
-static INLINE void fx_ldw_r8(void)
+static void fx_ldw_r8(void)
 {
    FX_LDW(8);
 }
-static INLINE void fx_ldw_r9(void)
+static void fx_ldw_r9(void)
 {
    FX_LDW(9);
 }
-static INLINE void fx_ldw_r10(void)
+static void fx_ldw_r10(void)
 {
    FX_LDW(10);
 }
-static INLINE void fx_ldw_r11(void)
+static void fx_ldw_r11(void)
 {
    FX_LDW(11);
 }
@@ -559,57 +557,57 @@ static INLINE void fx_ldw_r11(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_ldb_r0(void)
+static void fx_ldb_r0(void)
 {
    FX_LDB(0);
 }
-static INLINE void fx_ldb_r1(void)
+static void fx_ldb_r1(void)
 {
    FX_LDB(1);
 }
-static INLINE void fx_ldb_r2(void)
+static void fx_ldb_r2(void)
 {
    FX_LDB(2);
 }
-static INLINE void fx_ldb_r3(void)
+static void fx_ldb_r3(void)
 {
    FX_LDB(3);
 }
-static INLINE void fx_ldb_r4(void)
+static void fx_ldb_r4(void)
 {
    FX_LDB(4);
 }
-static INLINE void fx_ldb_r5(void)
+static void fx_ldb_r5(void)
 {
    FX_LDB(5);
 }
-static INLINE void fx_ldb_r6(void)
+static void fx_ldb_r6(void)
 {
    FX_LDB(6);
 }
-static INLINE void fx_ldb_r7(void)
+static void fx_ldb_r7(void)
 {
    FX_LDB(7);
 }
-static INLINE void fx_ldb_r8(void)
+static void fx_ldb_r8(void)
 {
    FX_LDB(8);
 }
-static INLINE void fx_ldb_r9(void)
+static void fx_ldb_r9(void)
 {
    FX_LDB(9);
 }
-static INLINE void fx_ldb_r10(void)
+static void fx_ldb_r10(void)
 {
    FX_LDB(10);
 }
-static INLINE void fx_ldb_r11(void)
+static void fx_ldb_r11(void)
 {
    FX_LDB(11);
 }
 
 /* 4c - plot - plot pixel with R1,R2 as x,y and the color register as the color */
-static INLINE void fx_plot_2bit(void)
+static void fx_plot_2bit(void)
 {
    uint32_t x = USEX8(R1);
    uint32_t y = USEX8(R2);
@@ -641,7 +639,7 @@ static INLINE void fx_plot_2bit(void)
 }
 
 /* 2c(ALT1) - rpix - read color of the pixel with R1,R2 as x,y */
-static INLINE void fx_rpix_2bit(void)
+static void fx_rpix_2bit(void)
 {
    uint32_t x = USEX8(R1);
    uint32_t y = USEX8(R2);
@@ -661,7 +659,7 @@ static INLINE void fx_rpix_2bit(void)
 }
 
 /* 4c - plot - plot pixel with R1,R2 as x,y and the color register as the color */
-static INLINE void fx_plot_4bit(void)
+static void fx_plot_4bit(void)
 {
    uint32_t x = USEX8(R1);
    uint32_t y = USEX8(R2);
@@ -701,7 +699,7 @@ static INLINE void fx_plot_4bit(void)
 }
 
 /* 4c(ALT1) - rpix - read color of the pixel with R1,R2 as x,y */
-static INLINE void fx_rpix_4bit(void)
+static void fx_rpix_4bit(void)
 {
    uint32_t x = USEX8(R1);
    uint32_t y = USEX8(R2);
@@ -723,7 +721,7 @@ static INLINE void fx_rpix_4bit(void)
 }
 
 /* 8c - plot - plot pixel with R1,R2 as x,y and the color register as the color */
-static INLINE void fx_plot_8bit(void)
+static void fx_plot_8bit(void)
 {
    uint32_t x = USEX8(R1);
    uint32_t y = USEX8(R2);
@@ -781,7 +779,7 @@ static INLINE void fx_plot_8bit(void)
 }
 
 /* 4c(ALT1) - rpix - read color of the pixel with R1,R2 as x,y */
-static INLINE void fx_rpix_8bit(void)
+static void fx_rpix_8bit(void)
 {
    uint32_t x = USEX8(R1);
    uint32_t y = USEX8(R2);
@@ -809,12 +807,12 @@ static INLINE void fx_rpix_8bit(void)
 
 /* 4o - plot - plot pixel with R1,R2 as x,y and the color register as the color */
 /* 4c(ALT1) - rpix - read color of the pixel with R1,R2 as x,y */
-static INLINE void fx_obj_func(void)
+static void fx_obj_func(void)
 {
 }
 
 /* 4d - swap - swap upper and lower byte of a register */
-static INLINE void fx_swap(void)
+static void fx_swap(void)
 {
    uint8_t c = (uint8_t)SREG;
    uint8_t d = (uint8_t)(SREG >> 8);
@@ -828,7 +826,7 @@ static INLINE void fx_swap(void)
 }
 
 /* 4e - color - copy source register to color register */
-static INLINE void fx_color(void)
+static void fx_color(void)
 {
    uint8_t c = (uint8_t)SREG;
    if (GSU.vPlotOptionReg & 0x04)
@@ -845,7 +843,7 @@ static INLINE void fx_color(void)
 }
 
 /* 4e(ALT1) - cmode - set plot option register */
-static INLINE void fx_cmode(void)
+static void fx_cmode(void)
 {
    GSU.vPlotOptionReg = SREG;
 
@@ -860,7 +858,7 @@ static INLINE void fx_cmode(void)
 }
 
 /* 4f - not - perform exclusive exor with 1 on all bits */
-static INLINE void fx_not(void)
+static void fx_not(void)
 {
    uint32_t v = ~SREG;
    R15++;
@@ -883,67 +881,67 @@ static INLINE void fx_not(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_add_r0(void)
+static void fx_add_r0(void)
 {
    FX_ADD(0);
 }
-static INLINE void fx_add_r1(void)
+static void fx_add_r1(void)
 {
    FX_ADD(1);
 }
-static INLINE void fx_add_r2(void)
+static void fx_add_r2(void)
 {
    FX_ADD(2);
 }
-static INLINE void fx_add_r3(void)
+static void fx_add_r3(void)
 {
    FX_ADD(3);
 }
-static INLINE void fx_add_r4(void)
+static void fx_add_r4(void)
 {
    FX_ADD(4);
 }
-static INLINE void fx_add_r5(void)
+static void fx_add_r5(void)
 {
    FX_ADD(5);
 }
-static INLINE void fx_add_r6(void)
+static void fx_add_r6(void)
 {
    FX_ADD(6);
 }
-static INLINE void fx_add_r7(void)
+static void fx_add_r7(void)
 {
    FX_ADD(7);
 }
-static INLINE void fx_add_r8(void)
+static void fx_add_r8(void)
 {
    FX_ADD(8);
 }
-static INLINE void fx_add_r9(void)
+static void fx_add_r9(void)
 {
    FX_ADD(9);
 }
-static INLINE void fx_add_r10(void)
+static void fx_add_r10(void)
 {
    FX_ADD(10);
 }
-static INLINE void fx_add_r11(void)
+static void fx_add_r11(void)
 {
    FX_ADD(11);
 }
-static INLINE void fx_add_r12(void)
+static void fx_add_r12(void)
 {
    FX_ADD(12);
 }
-static INLINE void fx_add_r13(void)
+static void fx_add_r13(void)
 {
    FX_ADD(13);
 }
-static INLINE void fx_add_r14(void)
+static void fx_add_r14(void)
 {
    FX_ADD(14);
 }
-static INLINE void fx_add_r15(void)
+static void fx_add_r15(void)
 {
    FX_ADD(15);
 }
@@ -960,67 +958,67 @@ static INLINE void fx_add_r15(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_adc_r0(void)
+static void fx_adc_r0(void)
 {
    FX_ADC(0);
 }
-static INLINE void fx_adc_r1(void)
+static void fx_adc_r1(void)
 {
    FX_ADC(1);
 }
-static INLINE void fx_adc_r2(void)
+static void fx_adc_r2(void)
 {
    FX_ADC(2);
 }
-static INLINE void fx_adc_r3(void)
+static void fx_adc_r3(void)
 {
    FX_ADC(3);
 }
-static INLINE void fx_adc_r4(void)
+static void fx_adc_r4(void)
 {
    FX_ADC(4);
 }
-static INLINE void fx_adc_r5(void)
+static void fx_adc_r5(void)
 {
    FX_ADC(5);
 }
-static INLINE void fx_adc_r6(void)
+static void fx_adc_r6(void)
 {
    FX_ADC(6);
 }
-static INLINE void fx_adc_r7(void)
+static void fx_adc_r7(void)
 {
    FX_ADC(7);
 }
-static INLINE void fx_adc_r8(void)
+static void fx_adc_r8(void)
 {
    FX_ADC(8);
 }
-static INLINE void fx_adc_r9(void)
+static void fx_adc_r9(void)
 {
    FX_ADC(9);
 }
-static INLINE void fx_adc_r10(void)
+static void fx_adc_r10(void)
 {
    FX_ADC(10);
 }
-static INLINE void fx_adc_r11(void)
+static void fx_adc_r11(void)
 {
    FX_ADC(11);
 }
-static INLINE void fx_adc_r12(void)
+static void fx_adc_r12(void)
 {
    FX_ADC(12);
 }
-static INLINE void fx_adc_r13(void)
+static void fx_adc_r13(void)
 {
    FX_ADC(13);
 }
-static INLINE void fx_adc_r14(void)
+static void fx_adc_r14(void)
 {
    FX_ADC(14);
 }
-static INLINE void fx_adc_r15(void)
+static void fx_adc_r15(void)
 {
    FX_ADC(15);
 }
@@ -1037,67 +1035,67 @@ static INLINE void fx_adc_r15(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_add_i0(void)
+static void fx_add_i0(void)
 {
    FX_ADD_I(0);
 }
-static INLINE void fx_add_i1(void)
+static void fx_add_i1(void)
 {
    FX_ADD_I(1);
 }
-static INLINE void fx_add_i2(void)
+static void fx_add_i2(void)
 {
    FX_ADD_I(2);
 }
-static INLINE void fx_add_i3(void)
+static void fx_add_i3(void)
 {
    FX_ADD_I(3);
 }
-static INLINE void fx_add_i4(void)
+static void fx_add_i4(void)
 {
    FX_ADD_I(4);
 }
-static INLINE void fx_add_i5(void)
+static void fx_add_i5(void)
 {
    FX_ADD_I(5);
 }
-static INLINE void fx_add_i6(void)
+static void fx_add_i6(void)
 {
    FX_ADD_I(6);
 }
-static INLINE void fx_add_i7(void)
+static void fx_add_i7(void)
 {
    FX_ADD_I(7);
 }
-static INLINE void fx_add_i8(void)
+static void fx_add_i8(void)
 {
    FX_ADD_I(8);
 }
-static INLINE void fx_add_i9(void)
+static void fx_add_i9(void)
 {
    FX_ADD_I(9);
 }
-static INLINE void fx_add_i10(void)
+static void fx_add_i10(void)
 {
    FX_ADD_I(10);
 }
-static INLINE void fx_add_i11(void)
+static void fx_add_i11(void)
 {
    FX_ADD_I(11);
 }
-static INLINE void fx_add_i12(void)
+static void fx_add_i12(void)
 {
    FX_ADD_I(12);
 }
-static INLINE void fx_add_i13(void)
+static void fx_add_i13(void)
 {
    FX_ADD_I(13);
 }
-static INLINE void fx_add_i14(void)
+static void fx_add_i14(void)
 {
    FX_ADD_I(14);
 }
-static INLINE void fx_add_i15(void)
+static void fx_add_i15(void)
 {
    FX_ADD_I(15);
 }
@@ -1114,67 +1112,67 @@ static INLINE void fx_add_i15(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_adc_i0(void)
+static void fx_adc_i0(void)
 {
    FX_ADC_I(0);
 }
-static INLINE void fx_adc_i1(void)
+static void fx_adc_i1(void)
 {
    FX_ADC_I(1);
 }
-static INLINE void fx_adc_i2(void)
+static void fx_adc_i2(void)
 {
    FX_ADC_I(2);
 }
-static INLINE void fx_adc_i3(void)
+static void fx_adc_i3(void)
 {
    FX_ADC_I(3);
 }
-static INLINE void fx_adc_i4(void)
+static void fx_adc_i4(void)
 {
    FX_ADC_I(4);
 }
-static INLINE void fx_adc_i5(void)
+static void fx_adc_i5(void)
 {
    FX_ADC_I(5);
 }
-static INLINE void fx_adc_i6(void)
+static void fx_adc_i6(void)
 {
    FX_ADC_I(6);
 }
-static INLINE void fx_adc_i7(void)
+static void fx_adc_i7(void)
 {
    FX_ADC_I(7);
 }
-static INLINE void fx_adc_i8(void)
+static void fx_adc_i8(void)
 {
    FX_ADC_I(8);
 }
-static INLINE void fx_adc_i9(void)
+static void fx_adc_i9(void)
 {
    FX_ADC_I(9);
 }
-static INLINE void fx_adc_i10(void)
+static void fx_adc_i10(void)
 {
    FX_ADC_I(10);
 }
-static INLINE void fx_adc_i11(void)
+static void fx_adc_i11(void)
 {
    FX_ADC_I(11);
 }
-static INLINE void fx_adc_i12(void)
+static void fx_adc_i12(void)
 {
    FX_ADC_I(12);
 }
-static INLINE void fx_adc_i13(void)
+static void fx_adc_i13(void)
 {
    FX_ADC_I(13);
 }
-static INLINE void fx_adc_i14(void)
+static void fx_adc_i14(void)
 {
    FX_ADC_I(14);
 }
-static INLINE void fx_adc_i15(void)
+static void fx_adc_i15(void)
 {
    FX_ADC_I(15);
 }
@@ -1191,67 +1189,67 @@ static INLINE void fx_adc_i15(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_sub_r0(void)
+static void fx_sub_r0(void)
 {
    FX_SUB(0);
 }
-static INLINE void fx_sub_r1(void)
+static void fx_sub_r1(void)
 {
    FX_SUB(1);
 }
-static INLINE void fx_sub_r2(void)
+static void fx_sub_r2(void)
 {
    FX_SUB(2);
 }
-static INLINE void fx_sub_r3(void)
+static void fx_sub_r3(void)
 {
    FX_SUB(3);
 }
-static INLINE void fx_sub_r4(void)
+static void fx_sub_r4(void)
 {
    FX_SUB(4);
 }
-static INLINE void fx_sub_r5(void)
+static void fx_sub_r5(void)
 {
    FX_SUB(5);
 }
-static INLINE void fx_sub_r6(void)
+static void fx_sub_r6(void)
 {
    FX_SUB(6);
 }
-static INLINE void fx_sub_r7(void)
+static void fx_sub_r7(void)
 {
    FX_SUB(7);
 }
-static INLINE void fx_sub_r8(void)
+static void fx_sub_r8(void)
 {
    FX_SUB(8);
 }
-static INLINE void fx_sub_r9(void)
+static void fx_sub_r9(void)
 {
    FX_SUB(9);
 }
-static INLINE void fx_sub_r10(void)
+static void fx_sub_r10(void)
 {
    FX_SUB(10);
 }
-static INLINE void fx_sub_r11(void)
+static void fx_sub_r11(void)
 {
    FX_SUB(11);
 }
-static INLINE void fx_sub_r12(void)
+static void fx_sub_r12(void)
 {
    FX_SUB(12);
 }
-static INLINE void fx_sub_r13(void)
+static void fx_sub_r13(void)
 {
    FX_SUB(13);
 }
-static INLINE void fx_sub_r14(void)
+static void fx_sub_r14(void)
 {
    FX_SUB(14);
 }
-static INLINE void fx_sub_r15(void)
+static void fx_sub_r15(void)
 {
    FX_SUB(15);
 }
@@ -1268,67 +1266,67 @@ static INLINE void fx_sub_r15(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_sbc_r0(void)
+static void fx_sbc_r0(void)
 {
    FX_SBC(0);
 }
-static INLINE void fx_sbc_r1(void)
+static void fx_sbc_r1(void)
 {
    FX_SBC(1);
 }
-static INLINE void fx_sbc_r2(void)
+static void fx_sbc_r2(void)
 {
    FX_SBC(2);
 }
-static INLINE void fx_sbc_r3(void)
+static void fx_sbc_r3(void)
 {
    FX_SBC(3);
 }
-static INLINE void fx_sbc_r4(void)
+static void fx_sbc_r4(void)
 {
    FX_SBC(4);
 }
-static INLINE void fx_sbc_r5(void)
+static void fx_sbc_r5(void)
 {
    FX_SBC(5);
 }
-static INLINE void fx_sbc_r6(void)
+static void fx_sbc_r6(void)
 {
    FX_SBC(6);
 }
-static INLINE void fx_sbc_r7(void)
+static void fx_sbc_r7(void)
 {
    FX_SBC(7);
 }
-static INLINE void fx_sbc_r8(void)
+static void fx_sbc_r8(void)
 {
    FX_SBC(8);
 }
-static INLINE void fx_sbc_r9(void)
+static void fx_sbc_r9(void)
 {
    FX_SBC(9);
 }
-static INLINE void fx_sbc_r10(void)
+static void fx_sbc_r10(void)
 {
    FX_SBC(10);
 }
-static INLINE void fx_sbc_r11(void)
+static void fx_sbc_r11(void)
 {
    FX_SBC(11);
 }
-static INLINE void fx_sbc_r12(void)
+static void fx_sbc_r12(void)
 {
    FX_SBC(12);
 }
-static INLINE void fx_sbc_r13(void)
+static void fx_sbc_r13(void)
 {
    FX_SBC(13);
 }
-static INLINE void fx_sbc_r14(void)
+static void fx_sbc_r14(void)
 {
    FX_SBC(14);
 }
-static INLINE void fx_sbc_r15(void)
+static void fx_sbc_r15(void)
 {
    FX_SBC(15);
 }
@@ -1345,67 +1343,67 @@ static INLINE void fx_sbc_r15(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_sub_i0(void)
+static void fx_sub_i0(void)
 {
    FX_SUB_I(0);
 }
-static INLINE void fx_sub_i1(void)
+static void fx_sub_i1(void)
 {
    FX_SUB_I(1);
 }
-static INLINE void fx_sub_i2(void)
+static void fx_sub_i2(void)
 {
    FX_SUB_I(2);
 }
-static INLINE void fx_sub_i3(void)
+static void fx_sub_i3(void)
 {
    FX_SUB_I(3);
 }
-static INLINE void fx_sub_i4(void)
+static void fx_sub_i4(void)
 {
    FX_SUB_I(4);
 }
-static INLINE void fx_sub_i5(void)
+static void fx_sub_i5(void)
 {
    FX_SUB_I(5);
 }
-static INLINE void fx_sub_i6(void)
+static void fx_sub_i6(void)
 {
    FX_SUB_I(6);
 }
-static INLINE void fx_sub_i7(void)
+static void fx_sub_i7(void)
 {
    FX_SUB_I(7);
 }
-static INLINE void fx_sub_i8(void)
+static void fx_sub_i8(void)
 {
    FX_SUB_I(8);
 }
-static INLINE void fx_sub_i9(void)
+static void fx_sub_i9(void)
 {
    FX_SUB_I(9);
 }
-static INLINE void fx_sub_i10(void)
+static void fx_sub_i10(void)
 {
    FX_SUB_I(10);
 }
-static INLINE void fx_sub_i11(void)
+static void fx_sub_i11(void)
 {
    FX_SUB_I(11);
 }
-static INLINE void fx_sub_i12(void)
+static void fx_sub_i12(void)
 {
    FX_SUB_I(12);
 }
-static INLINE void fx_sub_i13(void)
+static void fx_sub_i13(void)
 {
    FX_SUB_I(13);
 }
-static INLINE void fx_sub_i14(void)
+static void fx_sub_i14(void)
 {
    FX_SUB_I(14);
 }
-static INLINE void fx_sub_i15(void)
+static void fx_sub_i15(void)
 {
    FX_SUB_I(15);
 }
@@ -1420,73 +1418,73 @@ static INLINE void fx_sub_i15(void)
     R15++; \
     CLRFLAGS
 
-static INLINE void fx_cmp_r0(void)
+static void fx_cmp_r0(void)
 {
    FX_CMP(0);
 }
-static INLINE void fx_cmp_r1(void)
+static void fx_cmp_r1(void)
 {
    FX_CMP(1);
 }
-static INLINE void fx_cmp_r2(void)
+static void fx_cmp_r2(void)
 {
    FX_CMP(2);
 }
-static INLINE void fx_cmp_r3(void)
+static void fx_cmp_r3(void)
 {
    FX_CMP(3);
 }
-static INLINE void fx_cmp_r4(void)
+static void fx_cmp_r4(void)
 {
    FX_CMP(4);
 }
-static INLINE void fx_cmp_r5(void)
+static void fx_cmp_r5(void)
 {
    FX_CMP(5);
 }
-static INLINE void fx_cmp_r6(void)
+static void fx_cmp_r6(void)
 {
    FX_CMP(6);
 }
-static INLINE void fx_cmp_r7(void)
+static void fx_cmp_r7(void)
 {
    FX_CMP(7);
 }
-static INLINE void fx_cmp_r8(void)
+static void fx_cmp_r8(void)
 {
    FX_CMP(8);
 }
-static INLINE void fx_cmp_r9(void)
+static void fx_cmp_r9(void)
 {
    FX_CMP(9);
 }
-static INLINE void fx_cmp_r10(void)
+static void fx_cmp_r10(void)
 {
    FX_CMP(10);
 }
-static INLINE void fx_cmp_r11(void)
+static void fx_cmp_r11(void)
 {
    FX_CMP(11);
 }
-static INLINE void fx_cmp_r12(void)
+static void fx_cmp_r12(void)
 {
    FX_CMP(12);
 }
-static INLINE void fx_cmp_r13(void)
+static void fx_cmp_r13(void)
 {
    FX_CMP(13);
 }
-static INLINE void fx_cmp_r14(void)
+static void fx_cmp_r14(void)
 {
    FX_CMP(14);
 }
-static INLINE void fx_cmp_r15(void)
+static void fx_cmp_r15(void)
 {
    FX_CMP(15);
 }
 
 /* 70 - merge - R7 as upper byte, R8 as lower byte (used for texture-mapping) */
-static INLINE void fx_merge(void)
+static void fx_merge(void)
 {
    uint32_t v = (R7 & 0xff00) | ((R8 & 0xff00) >> 8);
    R15++;
@@ -1509,63 +1507,63 @@ static INLINE void fx_merge(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_and_r1(void)
+static void fx_and_r1(void)
 {
    FX_AND(1);
 }
-static INLINE void fx_and_r2(void)
+static void fx_and_r2(void)
 {
    FX_AND(2);
 }
-static INLINE void fx_and_r3(void)
+static void fx_and_r3(void)
 {
    FX_AND(3);
 }
-static INLINE void fx_and_r4(void)
+static void fx_and_r4(void)
 {
    FX_AND(4);
 }
-static INLINE void fx_and_r5(void)
+static void fx_and_r5(void)
 {
    FX_AND(5);
 }
-static INLINE void fx_and_r6(void)
+static void fx_and_r6(void)
 {
    FX_AND(6);
 }
-static INLINE void fx_and_r7(void)
+static void fx_and_r7(void)
 {
    FX_AND(7);
 }
-static INLINE void fx_and_r8(void)
+static void fx_and_r8(void)
 {
    FX_AND(8);
 }
-static INLINE void fx_and_r9(void)
+static void fx_and_r9(void)
 {
    FX_AND(9);
 }
-static INLINE void fx_and_r10(void)
+static void fx_and_r10(void)
 {
    FX_AND(10);
 }
-static INLINE void fx_and_r11(void)
+static void fx_and_r11(void)
 {
    FX_AND(11);
 }
-static INLINE void fx_and_r12(void)
+static void fx_and_r12(void)
 {
    FX_AND(12);
 }
-static INLINE void fx_and_r13(void)
+static void fx_and_r13(void)
 {
    FX_AND(13);
 }
-static INLINE void fx_and_r14(void)
+static void fx_and_r14(void)
 {
    FX_AND(14);
 }
-static INLINE void fx_and_r15(void)
+static void fx_and_r15(void)
 {
    FX_AND(15);
 }
@@ -1580,63 +1578,63 @@ static INLINE void fx_and_r15(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_bic_r1(void)
+static void fx_bic_r1(void)
 {
    FX_BIC(1);
 }
-static INLINE void fx_bic_r2(void)
+static void fx_bic_r2(void)
 {
    FX_BIC(2);
 }
-static INLINE void fx_bic_r3(void)
+static void fx_bic_r3(void)
 {
    FX_BIC(3);
 }
-static INLINE void fx_bic_r4(void)
+static void fx_bic_r4(void)
 {
    FX_BIC(4);
 }
-static INLINE void fx_bic_r5(void)
+static void fx_bic_r5(void)
 {
    FX_BIC(5);
 }
-static INLINE void fx_bic_r6(void)
+static void fx_bic_r6(void)
 {
    FX_BIC(6);
 }
-static INLINE void fx_bic_r7(void)
+static void fx_bic_r7(void)
 {
    FX_BIC(7);
 }
-static INLINE void fx_bic_r8(void)
+static void fx_bic_r8(void)
 {
    FX_BIC(8);
 }
-static INLINE void fx_bic_r9(void)
+static void fx_bic_r9(void)
 {
    FX_BIC(9);
 }
-static INLINE void fx_bic_r10(void)
+static void fx_bic_r10(void)
 {
    FX_BIC(10);
 }
-static INLINE void fx_bic_r11(void)
+static void fx_bic_r11(void)
 {
    FX_BIC(11);
 }
-static INLINE void fx_bic_r12(void)
+static void fx_bic_r12(void)
 {
    FX_BIC(12);
 }
-static INLINE void fx_bic_r13(void)
+static void fx_bic_r13(void)
 {
    FX_BIC(13);
 }
-static INLINE void fx_bic_r14(void)
+static void fx_bic_r14(void)
 {
    FX_BIC(14);
 }
-static INLINE void fx_bic_r15(void)
+static void fx_bic_r15(void)
 {
    FX_BIC(15);
 }
@@ -1651,63 +1649,63 @@ static INLINE void fx_bic_r15(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_and_i1(void)
+static void fx_and_i1(void)
 {
    FX_AND_I(1);
 }
-static INLINE void fx_and_i2(void)
+static void fx_and_i2(void)
 {
    FX_AND_I(2);
 }
-static INLINE void fx_and_i3(void)
+static void fx_and_i3(void)
 {
    FX_AND_I(3);
 }
-static INLINE void fx_and_i4(void)
+static void fx_and_i4(void)
 {
    FX_AND_I(4);
 }
-static INLINE void fx_and_i5(void)
+static void fx_and_i5(void)
 {
    FX_AND_I(5);
 }
-static INLINE void fx_and_i6(void)
+static void fx_and_i6(void)
 {
    FX_AND_I(6);
 }
-static INLINE void fx_and_i7(void)
+static void fx_and_i7(void)
 {
    FX_AND_I(7);
 }
-static INLINE void fx_and_i8(void)
+static void fx_and_i8(void)
 {
    FX_AND_I(8);
 }
-static INLINE void fx_and_i9(void)
+static void fx_and_i9(void)
 {
    FX_AND_I(9);
 }
-static INLINE void fx_and_i10(void)
+static void fx_and_i10(void)
 {
    FX_AND_I(10);
 }
-static INLINE void fx_and_i11(void)
+static void fx_and_i11(void)
 {
    FX_AND_I(11);
 }
-static INLINE void fx_and_i12(void)
+static void fx_and_i12(void)
 {
    FX_AND_I(12);
 }
-static INLINE void fx_and_i13(void)
+static void fx_and_i13(void)
 {
    FX_AND_I(13);
 }
-static INLINE void fx_and_i14(void)
+static void fx_and_i14(void)
 {
    FX_AND_I(14);
 }
-static INLINE void fx_and_i15(void)
+static void fx_and_i15(void)
 {
    FX_AND_I(15);
 }
@@ -1722,63 +1720,63 @@ static INLINE void fx_and_i15(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_bic_i1(void)
+static void fx_bic_i1(void)
 {
    FX_BIC_I(1);
 }
-static INLINE void fx_bic_i2(void)
+static void fx_bic_i2(void)
 {
    FX_BIC_I(2);
 }
-static INLINE void fx_bic_i3(void)
+static void fx_bic_i3(void)
 {
    FX_BIC_I(3);
 }
-static INLINE void fx_bic_i4(void)
+static void fx_bic_i4(void)
 {
    FX_BIC_I(4);
 }
-static INLINE void fx_bic_i5(void)
+static void fx_bic_i5(void)
 {
    FX_BIC_I(5);
 }
-static INLINE void fx_bic_i6(void)
+static void fx_bic_i6(void)
 {
    FX_BIC_I(6);
 }
-static INLINE void fx_bic_i7(void)
+static void fx_bic_i7(void)
 {
    FX_BIC_I(7);
 }
-static INLINE void fx_bic_i8(void)
+static void fx_bic_i8(void)
 {
    FX_BIC_I(8);
 }
-static INLINE void fx_bic_i9(void)
+static void fx_bic_i9(void)
 {
    FX_BIC_I(9);
 }
-static INLINE void fx_bic_i10(void)
+static void fx_bic_i10(void)
 {
    FX_BIC_I(10);
 }
-static INLINE void fx_bic_i11(void)
+static void fx_bic_i11(void)
 {
    FX_BIC_I(11);
 }
-static INLINE void fx_bic_i12(void)
+static void fx_bic_i12(void)
 {
    FX_BIC_I(12);
 }
-static INLINE void fx_bic_i13(void)
+static void fx_bic_i13(void)
 {
    FX_BIC_I(13);
 }
-static INLINE void fx_bic_i14(void)
+static void fx_bic_i14(void)
 {
    FX_BIC_I(14);
 }
-static INLINE void fx_bic_i15(void)
+static void fx_bic_i15(void)
 {
    FX_BIC_I(15);
 }
@@ -1793,67 +1791,67 @@ static INLINE void fx_bic_i15(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_mult_r0(void)
+static void fx_mult_r0(void)
 {
    FX_MULT(0);
 }
-static INLINE void fx_mult_r1(void)
+static void fx_mult_r1(void)
 {
    FX_MULT(1);
 }
-static INLINE void fx_mult_r2(void)
+static void fx_mult_r2(void)
 {
    FX_MULT(2);
 }
-static INLINE void fx_mult_r3(void)
+static void fx_mult_r3(void)
 {
    FX_MULT(3);
 }
-static INLINE void fx_mult_r4(void)
+static void fx_mult_r4(void)
 {
    FX_MULT(4);
 }
-static INLINE void fx_mult_r5(void)
+static void fx_mult_r5(void)
 {
    FX_MULT(5);
 }
-static INLINE void fx_mult_r6(void)
+static void fx_mult_r6(void)
 {
    FX_MULT(6);
 }
-static INLINE void fx_mult_r7(void)
+static void fx_mult_r7(void)
 {
    FX_MULT(7);
 }
-static INLINE void fx_mult_r8(void)
+static void fx_mult_r8(void)
 {
    FX_MULT(8);
 }
-static INLINE void fx_mult_r9(void)
+static void fx_mult_r9(void)
 {
    FX_MULT(9);
 }
-static INLINE void fx_mult_r10(void)
+static void fx_mult_r10(void)
 {
    FX_MULT(10);
 }
-static INLINE void fx_mult_r11(void)
+static void fx_mult_r11(void)
 {
    FX_MULT(11);
 }
-static INLINE void fx_mult_r12(void)
+static void fx_mult_r12(void)
 {
    FX_MULT(12);
 }
-static INLINE void fx_mult_r13(void)
+static void fx_mult_r13(void)
 {
    FX_MULT(13);
 }
-static INLINE void fx_mult_r14(void)
+static void fx_mult_r14(void)
 {
    FX_MULT(14);
 }
-static INLINE void fx_mult_r15(void)
+static void fx_mult_r15(void)
 {
    FX_MULT(15);
 }
@@ -1868,67 +1866,67 @@ static INLINE void fx_mult_r15(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_umult_r0(void)
+static void fx_umult_r0(void)
 {
    FX_UMULT(0);
 }
-static INLINE void fx_umult_r1(void)
+static void fx_umult_r1(void)
 {
    FX_UMULT(1);
 }
-static INLINE void fx_umult_r2(void)
+static void fx_umult_r2(void)
 {
    FX_UMULT(2);
 }
-static INLINE void fx_umult_r3(void)
+static void fx_umult_r3(void)
 {
    FX_UMULT(3);
 }
-static INLINE void fx_umult_r4(void)
+static void fx_umult_r4(void)
 {
    FX_UMULT(4);
 }
-static INLINE void fx_umult_r5(void)
+static void fx_umult_r5(void)
 {
    FX_UMULT(5);
 }
-static INLINE void fx_umult_r6(void)
+static void fx_umult_r6(void)
 {
    FX_UMULT(6);
 }
-static INLINE void fx_umult_r7(void)
+static void fx_umult_r7(void)
 {
    FX_UMULT(7);
 }
-static INLINE void fx_umult_r8(void)
+static void fx_umult_r8(void)
 {
    FX_UMULT(8);
 }
-static INLINE void fx_umult_r9(void)
+static void fx_umult_r9(void)
 {
    FX_UMULT(9);
 }
-static INLINE void fx_umult_r10(void)
+static void fx_umult_r10(void)
 {
    FX_UMULT(10);
 }
-static INLINE void fx_umult_r11(void)
+static void fx_umult_r11(void)
 {
    FX_UMULT(11);
 }
-static INLINE void fx_umult_r12(void)
+static void fx_umult_r12(void)
 {
    FX_UMULT(12);
 }
-static INLINE void fx_umult_r13(void)
+static void fx_umult_r13(void)
 {
    FX_UMULT(13);
 }
-static INLINE void fx_umult_r14(void)
+static void fx_umult_r14(void)
 {
    FX_UMULT(14);
 }
-static INLINE void fx_umult_r15(void)
+static void fx_umult_r15(void)
 {
    FX_UMULT(15);
 }
@@ -1943,67 +1941,67 @@ static INLINE void fx_umult_r15(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_mult_i0(void)
+static void fx_mult_i0(void)
 {
    FX_MULT_I(0);
 }
-static INLINE void fx_mult_i1(void)
+static void fx_mult_i1(void)
 {
    FX_MULT_I(1);
 }
-static INLINE void fx_mult_i2(void)
+static void fx_mult_i2(void)
 {
    FX_MULT_I(2);
 }
-static INLINE void fx_mult_i3(void)
+static void fx_mult_i3(void)
 {
    FX_MULT_I(3);
 }
-static INLINE void fx_mult_i4(void)
+static void fx_mult_i4(void)
 {
    FX_MULT_I(4);
 }
-static INLINE void fx_mult_i5(void)
+static void fx_mult_i5(void)
 {
    FX_MULT_I(5);
 }
-static INLINE void fx_mult_i6(void)
+static void fx_mult_i6(void)
 {
    FX_MULT_I(6);
 }
-static INLINE void fx_mult_i7(void)
+static void fx_mult_i7(void)
 {
    FX_MULT_I(7);
 }
-static INLINE void fx_mult_i8(void)
+static void fx_mult_i8(void)
 {
    FX_MULT_I(8);
 }
-static INLINE void fx_mult_i9(void)
+static void fx_mult_i9(void)
 {
    FX_MULT_I(9);
 }
-static INLINE void fx_mult_i10(void)
+static void fx_mult_i10(void)
 {
    FX_MULT_I(10);
 }
-static INLINE void fx_mult_i11(void)
+static void fx_mult_i11(void)
 {
    FX_MULT_I(11);
 }
-static INLINE void fx_mult_i12(void)
+static void fx_mult_i12(void)
 {
    FX_MULT_I(12);
 }
-static INLINE void fx_mult_i13(void)
+static void fx_mult_i13(void)
 {
    FX_MULT_I(13);
 }
-static INLINE void fx_mult_i14(void)
+static void fx_mult_i14(void)
 {
    FX_MULT_I(14);
 }
-static INLINE void fx_mult_i15(void)
+static void fx_mult_i15(void)
 {
    FX_MULT_I(15);
 }
@@ -2018,73 +2016,73 @@ static INLINE void fx_mult_i15(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_umult_i0(void)
+static void fx_umult_i0(void)
 {
    FX_UMULT_I(0);
 }
-static INLINE void fx_umult_i1(void)
+static void fx_umult_i1(void)
 {
    FX_UMULT_I(1);
 }
-static INLINE void fx_umult_i2(void)
+static void fx_umult_i2(void)
 {
    FX_UMULT_I(2);
 }
-static INLINE void fx_umult_i3(void)
+static void fx_umult_i3(void)
 {
    FX_UMULT_I(3);
 }
-static INLINE void fx_umult_i4(void)
+static void fx_umult_i4(void)
 {
    FX_UMULT_I(4);
 }
-static INLINE void fx_umult_i5(void)
+static void fx_umult_i5(void)
 {
    FX_UMULT_I(5);
 }
-static INLINE void fx_umult_i6(void)
+static void fx_umult_i6(void)
 {
    FX_UMULT_I(6);
 }
-static INLINE void fx_umult_i7(void)
+static void fx_umult_i7(void)
 {
    FX_UMULT_I(7);
 }
-static INLINE void fx_umult_i8(void)
+static void fx_umult_i8(void)
 {
    FX_UMULT_I(8);
 }
-static INLINE void fx_umult_i9(void)
+static void fx_umult_i9(void)
 {
    FX_UMULT_I(9);
 }
-static INLINE void fx_umult_i10(void)
+static void fx_umult_i10(void)
 {
    FX_UMULT_I(10);
 }
-static INLINE void fx_umult_i11(void)
+static void fx_umult_i11(void)
 {
    FX_UMULT_I(11);
 }
-static INLINE void fx_umult_i12(void)
+static void fx_umult_i12(void)
 {
    FX_UMULT_I(12);
 }
-static INLINE void fx_umult_i13(void)
+static void fx_umult_i13(void)
 {
    FX_UMULT_I(13);
 }
-static INLINE void fx_umult_i14(void)
+static void fx_umult_i14(void)
 {
    FX_UMULT_I(14);
 }
-static INLINE void fx_umult_i15(void)
+static void fx_umult_i15(void)
 {
    FX_UMULT_I(15);
 }
 
 /* 90 - sbk - store word to last accessed RAM address */
-static INLINE void fx_sbk(void)
+static void fx_sbk(void)
 {
    RAM(GSU.vLastRamAdr) = (uint8_t)SREG;
    RAM(GSU.vLastRamAdr ^ 1) = (uint8_t)(SREG >> 8);
@@ -2098,25 +2096,25 @@ static INLINE void fx_sbk(void)
     CLRFLAGS; \
     R15++
 
-static INLINE void fx_link_i1(void)
+static void fx_link_i1(void)
 {
    FX_LINK_I(1);
 }
-static INLINE void fx_link_i2(void)
+static void fx_link_i2(void)
 {
    FX_LINK_I(2);
 }
-static INLINE void fx_link_i3(void)
+static void fx_link_i3(void)
 {
    FX_LINK_I(3);
 }
-static INLINE void fx_link_i4(void)
+static void fx_link_i4(void)
 {
    FX_LINK_I(4);
 }
 
 /* 95 - sex - sign extend 8 bit to 16 bit */
-static INLINE void fx_sex(void)
+static void fx_sex(void)
 {
    uint32_t v = (uint32_t)SEX8(SREG);
    R15++;
@@ -2128,7 +2126,7 @@ static INLINE void fx_sex(void)
 }
 
 /* 96 - asr - aritmetric shift right by one */
-static INLINE void fx_asr(void)
+static void fx_asr(void)
 {
    uint32_t v;
    GSU.vCarry = SREG & 1;
@@ -2142,7 +2140,7 @@ static INLINE void fx_asr(void)
 }
 
 /* 96(ALT1) - div2 - aritmetric shift right by one */
-static INLINE void fx_div2(void)
+static void fx_div2(void)
 {
    uint32_t v;
    int32_t s = SEX16(SREG);
@@ -2160,7 +2158,7 @@ static INLINE void fx_div2(void)
 }
 
 /* 97 - ror - rotate right by one */
-static INLINE void fx_ror(void)
+static void fx_ror(void)
 {
    uint32_t v = (USEX16(SREG) >> 1) | (GSU.vCarry << 15);
    GSU.vCarry = SREG & 1;
@@ -2177,27 +2175,27 @@ static INLINE void fx_ror(void)
     R15 = GSU.avReg[reg]; \
     CLRFLAGS
 
-static INLINE void fx_jmp_r8(void)
+static void fx_jmp_r8(void)
 {
    FX_JMP(8);
 }
-static INLINE void fx_jmp_r9(void)
+static void fx_jmp_r9(void)
 {
    FX_JMP(9);
 }
-static INLINE void fx_jmp_r10(void)
+static void fx_jmp_r10(void)
 {
    FX_JMP(10);
 }
-static INLINE void fx_jmp_r11(void)
+static void fx_jmp_r11(void)
 {
    FX_JMP(11);
 }
-static INLINE void fx_jmp_r12(void)
+static void fx_jmp_r12(void)
 {
    FX_JMP(12);
 }
-static INLINE void fx_jmp_r13(void)
+static void fx_jmp_r13(void)
 {
    FX_JMP(13);
 }
@@ -2211,33 +2209,33 @@ static INLINE void fx_jmp_r13(void)
     fx_cache(); \
     R15--
 
-static INLINE void fx_ljmp_r8(void)
+static void fx_ljmp_r8(void)
 {
    FX_LJMP(8);
 }
-static INLINE void fx_ljmp_r9(void)
+static void fx_ljmp_r9(void)
 {
    FX_LJMP(9);
 }
-static INLINE void fx_ljmp_r10(void)
+static void fx_ljmp_r10(void)
 {
    FX_LJMP(10);
 }
-static INLINE void fx_ljmp_r11(void)
+static void fx_ljmp_r11(void)
 {
    FX_LJMP(11);
 }
-static INLINE void fx_ljmp_r12(void)
+static void fx_ljmp_r12(void)
 {
    FX_LJMP(12);
 }
-static INLINE void fx_ljmp_r13(void)
+static void fx_ljmp_r13(void)
 {
    FX_LJMP(13);
 }
 
 /* 9e - lob - set upper byte to zero (keep low byte) */
-static INLINE void fx_lob(void)
+static void fx_lob(void)
 {
    uint32_t v = USEX8(SREG);
    R15++;
@@ -2249,7 +2247,7 @@ static INLINE void fx_lob(void)
 }
 
 /* 9f - fmult - 16 bit to 32 bit signed multiplication, upper 16 bits only */
-static INLINE void fx_fmult(void)
+static void fx_fmult(void)
 {
    uint32_t v;
    uint32_t c = (uint32_t)(SEX16(SREG) * SEX16(R6));
@@ -2264,7 +2262,7 @@ static INLINE void fx_fmult(void)
 }
 
 /* 9f(ALT1) - lmult - 16 bit to 32 bit signed multiplication */
-static INLINE void fx_lmult(void)
+static void fx_lmult(void)
 {
    uint32_t v;
    uint32_t c = (uint32_t)(SEX16(SREG) * SEX16(R6));
@@ -2289,68 +2287,68 @@ static INLINE void fx_lmult(void)
     GSU.avReg[reg] = SEX8(v); \
     CLRFLAGS
 
-static INLINE void fx_ibt_r0(void)
+static void fx_ibt_r0(void)
 {
    FX_IBT(0);
 }
-static INLINE void fx_ibt_r1(void)
+static void fx_ibt_r1(void)
 {
    FX_IBT(1);
 }
-static INLINE void fx_ibt_r2(void)
+static void fx_ibt_r2(void)
 {
    FX_IBT(2);
 }
-static INLINE void fx_ibt_r3(void)
+static void fx_ibt_r3(void)
 {
    FX_IBT(3);
 }
-static INLINE void fx_ibt_r4(void)
+static void fx_ibt_r4(void)
 {
    FX_IBT(4);
 }
-static INLINE void fx_ibt_r5(void)
+static void fx_ibt_r5(void)
 {
    FX_IBT(5);
 }
-static INLINE void fx_ibt_r6(void)
+static void fx_ibt_r6(void)
 {
    FX_IBT(6);
 }
-static INLINE void fx_ibt_r7(void)
+static void fx_ibt_r7(void)
 {
    FX_IBT(7);
 }
-static INLINE void fx_ibt_r8(void)
+static void fx_ibt_r8(void)
 {
    FX_IBT(8);
 }
-static INLINE void fx_ibt_r9(void)
+static void fx_ibt_r9(void)
 {
    FX_IBT(9);
 }
-static INLINE void fx_ibt_r10(void)
+static void fx_ibt_r10(void)
 {
    FX_IBT(10);
 }
-static INLINE void fx_ibt_r11(void)
+static void fx_ibt_r11(void)
 {
    FX_IBT(11);
 }
-static INLINE void fx_ibt_r12(void)
+static void fx_ibt_r12(void)
 {
    FX_IBT(12);
 }
-static INLINE void fx_ibt_r13(void)
+static void fx_ibt_r13(void)
 {
    FX_IBT(13);
 }
-static INLINE void fx_ibt_r14(void)
+static void fx_ibt_r14(void)
 {
    FX_IBT(14);
    READR14;
 }
-static INLINE void fx_ibt_r15(void)
+static void fx_ibt_r15(void)
 {
    FX_IBT(15);
 }
@@ -2365,68 +2363,68 @@ static INLINE void fx_ibt_r15(void)
     GSU.avReg[reg] |= ((uint32_t) RAM(GSU.vLastRamAdr + 1)) << 8; \
     CLRFLAGS
 
-static INLINE void fx_lms_r0(void)
+static void fx_lms_r0(void)
 {
    FX_LMS(0);
 }
-static INLINE void fx_lms_r1(void)
+static void fx_lms_r1(void)
 {
    FX_LMS(1);
 }
-static INLINE void fx_lms_r2(void)
+static void fx_lms_r2(void)
 {
    FX_LMS(2);
 }
-static INLINE void fx_lms_r3(void)
+static void fx_lms_r3(void)
 {
    FX_LMS(3);
 }
-static INLINE void fx_lms_r4(void)
+static void fx_lms_r4(void)
 {
    FX_LMS(4);
 }
-static INLINE void fx_lms_r5(void)
+static void fx_lms_r5(void)
 {
    FX_LMS(5);
 }
-static INLINE void fx_lms_r6(void)
+static void fx_lms_r6(void)
 {
    FX_LMS(6);
 }
-static INLINE void fx_lms_r7(void)
+static void fx_lms_r7(void)
 {
    FX_LMS(7);
 }
-static INLINE void fx_lms_r8(void)
+static void fx_lms_r8(void)
 {
    FX_LMS(8);
 }
-static INLINE void fx_lms_r9(void)
+static void fx_lms_r9(void)
 {
    FX_LMS(9);
 }
-static INLINE void fx_lms_r10(void)
+static void fx_lms_r10(void)
 {
    FX_LMS(10);
 }
-static INLINE void fx_lms_r11(void)
+static void fx_lms_r11(void)
 {
    FX_LMS(11);
 }
-static INLINE void fx_lms_r12(void)
+static void fx_lms_r12(void)
 {
    FX_LMS(12);
 }
-static INLINE void fx_lms_r13(void)
+static void fx_lms_r13(void)
 {
    FX_LMS(13);
 }
-static INLINE void fx_lms_r14(void)
+static void fx_lms_r14(void)
 {
    FX_LMS(14);
    READR14;
 }
-static INLINE void fx_lms_r15(void)
+static void fx_lms_r15(void)
 {
    FX_LMS(15);
 }
@@ -2443,67 +2441,67 @@ static INLINE void fx_lms_r15(void)
     CLRFLAGS; \
     R15++
 
-static INLINE void fx_sms_r0(void)
+static void fx_sms_r0(void)
 {
    FX_SMS(0);
 }
-static INLINE void fx_sms_r1(void)
+static void fx_sms_r1(void)
 {
    FX_SMS(1);
 }
-static INLINE void fx_sms_r2(void)
+static void fx_sms_r2(void)
 {
    FX_SMS(2);
 }
-static INLINE void fx_sms_r3(void)
+static void fx_sms_r3(void)
 {
    FX_SMS(3);
 }
-static INLINE void fx_sms_r4(void)
+static void fx_sms_r4(void)
 {
    FX_SMS(4);
 }
-static INLINE void fx_sms_r5(void)
+static void fx_sms_r5(void)
 {
    FX_SMS(5);
 }
-static INLINE void fx_sms_r6(void)
+static void fx_sms_r6(void)
 {
    FX_SMS(6);
 }
-static INLINE void fx_sms_r7(void)
+static void fx_sms_r7(void)
 {
    FX_SMS(7);
 }
-static INLINE void fx_sms_r8(void)
+static void fx_sms_r8(void)
 {
    FX_SMS(8);
 }
-static INLINE void fx_sms_r9(void)
+static void fx_sms_r9(void)
 {
    FX_SMS(9);
 }
-static INLINE void fx_sms_r10(void)
+static void fx_sms_r10(void)
 {
    FX_SMS(10);
 }
-static INLINE void fx_sms_r11(void)
+static void fx_sms_r11(void)
 {
    FX_SMS(11);
 }
-static INLINE void fx_sms_r12(void)
+static void fx_sms_r12(void)
 {
    FX_SMS(12);
 }
-static INLINE void fx_sms_r13(void)
+static void fx_sms_r13(void)
 {
    FX_SMS(13);
 }
-static INLINE void fx_sms_r14(void)
+static void fx_sms_r14(void)
 {
    FX_SMS(14);
 }
-static INLINE void fx_sms_r15(void)
+static void fx_sms_r15(void)
 {
    FX_SMS(15);
 }
@@ -2528,73 +2526,73 @@ static INLINE void fx_sms_r15(void)
         R15++; \
     }
 
-static INLINE void fx_from_r0(void)
+static void fx_from_r0(void)
 {
    FX_FROM(0);
 }
-static INLINE void fx_from_r1(void)
+static void fx_from_r1(void)
 {
    FX_FROM(1);
 }
-static INLINE void fx_from_r2(void)
+static void fx_from_r2(void)
 {
    FX_FROM(2);
 }
-static INLINE void fx_from_r3(void)
+static void fx_from_r3(void)
 {
    FX_FROM(3);
 }
-static INLINE void fx_from_r4(void)
+static void fx_from_r4(void)
 {
    FX_FROM(4);
 }
-static INLINE void fx_from_r5(void)
+static void fx_from_r5(void)
 {
    FX_FROM(5);
 }
-static INLINE void fx_from_r6(void)
+static void fx_from_r6(void)
 {
    FX_FROM(6);
 }
-static INLINE void fx_from_r7(void)
+static void fx_from_r7(void)
 {
    FX_FROM(7);
 }
-static INLINE void fx_from_r8(void)
+static void fx_from_r8(void)
 {
    FX_FROM(8);
 }
-static INLINE void fx_from_r9(void)
+static void fx_from_r9(void)
 {
    FX_FROM(9);
 }
-static INLINE void fx_from_r10(void)
+static void fx_from_r10(void)
 {
    FX_FROM(10);
 }
-static INLINE void fx_from_r11(void)
+static void fx_from_r11(void)
 {
    FX_FROM(11);
 }
-static INLINE void fx_from_r12(void)
+static void fx_from_r12(void)
 {
    FX_FROM(12);
 }
-static INLINE void fx_from_r13(void)
+static void fx_from_r13(void)
 {
    FX_FROM(13);
 }
-static INLINE void fx_from_r14(void)
+static void fx_from_r14(void)
 {
    FX_FROM(14);
 }
-static INLINE void fx_from_r15(void)
+static void fx_from_r15(void)
 {
    FX_FROM(15);
 }
 
 /* c0 - hib - move high-byte to low-byte */
-static INLINE void fx_hib(void)
+static void fx_hib(void)
 {
    uint32_t v = USEX8(SREG >> 8);
    R15++;
@@ -2615,63 +2613,63 @@ static INLINE void fx_hib(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_or_r1(void)
+static void fx_or_r1(void)
 {
    FX_OR(1);
 }
-static INLINE void fx_or_r2(void)
+static void fx_or_r2(void)
 {
    FX_OR(2);
 }
-static INLINE void fx_or_r3(void)
+static void fx_or_r3(void)
 {
    FX_OR(3);
 }
-static INLINE void fx_or_r4(void)
+static void fx_or_r4(void)
 {
    FX_OR(4);
 }
-static INLINE void fx_or_r5(void)
+static void fx_or_r5(void)
 {
    FX_OR(5);
 }
-static INLINE void fx_or_r6(void)
+static void fx_or_r6(void)
 {
    FX_OR(6);
 }
-static INLINE void fx_or_r7(void)
+static void fx_or_r7(void)
 {
    FX_OR(7);
 }
-static INLINE void fx_or_r8(void)
+static void fx_or_r8(void)
 {
    FX_OR(8);
 }
-static INLINE void fx_or_r9(void)
+static void fx_or_r9(void)
 {
    FX_OR(9);
 }
-static INLINE void fx_or_r10(void)
+static void fx_or_r10(void)
 {
    FX_OR(10);
 }
-static INLINE void fx_or_r11(void)
+static void fx_or_r11(void)
 {
    FX_OR(11);
 }
-static INLINE void fx_or_r12(void)
+static void fx_or_r12(void)
 {
    FX_OR(12);
 }
-static INLINE void fx_or_r13(void)
+static void fx_or_r13(void)
 {
    FX_OR(13);
 }
-static INLINE void fx_or_r14(void)
+static void fx_or_r14(void)
 {
    FX_OR(14);
 }
-static INLINE void fx_or_r15(void)
+static void fx_or_r15(void)
 {
    FX_OR(15);
 }
@@ -2686,63 +2684,63 @@ static INLINE void fx_or_r15(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_xor_r1(void)
+static void fx_xor_r1(void)
 {
    FX_XOR(1);
 }
-static INLINE void fx_xor_r2(void)
+static void fx_xor_r2(void)
 {
    FX_XOR(2);
 }
-static INLINE void fx_xor_r3(void)
+static void fx_xor_r3(void)
 {
    FX_XOR(3);
 }
-static INLINE void fx_xor_r4(void)
+static void fx_xor_r4(void)
 {
    FX_XOR(4);
 }
-static INLINE void fx_xor_r5(void)
+static void fx_xor_r5(void)
 {
    FX_XOR(5);
 }
-static INLINE void fx_xor_r6(void)
+static void fx_xor_r6(void)
 {
    FX_XOR(6);
 }
-static INLINE void fx_xor_r7(void)
+static void fx_xor_r7(void)
 {
    FX_XOR(7);
 }
-static INLINE void fx_xor_r8(void)
+static void fx_xor_r8(void)
 {
    FX_XOR(8);
 }
-static INLINE void fx_xor_r9(void)
+static void fx_xor_r9(void)
 {
    FX_XOR(9);
 }
-static INLINE void fx_xor_r10(void)
+static void fx_xor_r10(void)
 {
    FX_XOR(10);
 }
-static INLINE void fx_xor_r11(void)
+static void fx_xor_r11(void)
 {
    FX_XOR(11);
 }
-static INLINE void fx_xor_r12(void)
+static void fx_xor_r12(void)
 {
    FX_XOR(12);
 }
-static INLINE void fx_xor_r13(void)
+static void fx_xor_r13(void)
 {
    FX_XOR(13);
 }
-static INLINE void fx_xor_r14(void)
+static void fx_xor_r14(void)
 {
    FX_XOR(14);
 }
-static INLINE void fx_xor_r15(void)
+static void fx_xor_r15(void)
 {
    FX_XOR(15);
 }
@@ -2757,63 +2755,63 @@ static INLINE void fx_xor_r15(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_or_i1(void)
+static void fx_or_i1(void)
 {
    FX_OR_I(1);
 }
-static INLINE void fx_or_i2(void)
+static void fx_or_i2(void)
 {
    FX_OR_I(2);
 }
-static INLINE void fx_or_i3(void)
+static void fx_or_i3(void)
 {
    FX_OR_I(3);
 }
-static INLINE void fx_or_i4(void)
+static void fx_or_i4(void)
 {
    FX_OR_I(4);
 }
-static INLINE void fx_or_i5(void)
+static void fx_or_i5(void)
 {
    FX_OR_I(5);
 }
-static INLINE void fx_or_i6(void)
+static void fx_or_i6(void)
 {
    FX_OR_I(6);
 }
-static INLINE void fx_or_i7(void)
+static void fx_or_i7(void)
 {
    FX_OR_I(7);
 }
-static INLINE void fx_or_i8(void)
+static void fx_or_i8(void)
 {
    FX_OR_I(8);
 }
-static INLINE void fx_or_i9(void)
+static void fx_or_i9(void)
 {
    FX_OR_I(9);
 }
-static INLINE void fx_or_i10(void)
+static void fx_or_i10(void)
 {
    FX_OR_I(10);
 }
-static INLINE void fx_or_i11(void)
+static void fx_or_i11(void)
 {
    FX_OR_I(11);
 }
-static INLINE void fx_or_i12(void)
+static void fx_or_i12(void)
 {
    FX_OR_I(12);
 }
-static INLINE void fx_or_i13(void)
+static void fx_or_i13(void)
 {
    FX_OR_I(13);
 }
-static INLINE void fx_or_i14(void)
+static void fx_or_i14(void)
 {
    FX_OR_I(14);
 }
-static INLINE void fx_or_i15(void)
+static void fx_or_i15(void)
 {
    FX_OR_I(15);
 }
@@ -2828,63 +2826,63 @@ static INLINE void fx_or_i15(void)
     TESTR14; \
     CLRFLAGS
 
-static INLINE void fx_xor_i1(void)
+static void fx_xor_i1(void)
 {
    FX_XOR_I(1);
 }
-static INLINE void fx_xor_i2(void)
+static void fx_xor_i2(void)
 {
    FX_XOR_I(2);
 }
-static INLINE void fx_xor_i3(void)
+static void fx_xor_i3(void)
 {
    FX_XOR_I(3);
 }
-static INLINE void fx_xor_i4(void)
+static void fx_xor_i4(void)
 {
    FX_XOR_I(4);
 }
-static INLINE void fx_xor_i5(void)
+static void fx_xor_i5(void)
 {
    FX_XOR_I(5);
 }
-static INLINE void fx_xor_i6(void)
+static void fx_xor_i6(void)
 {
    FX_XOR_I(6);
 }
-static INLINE void fx_xor_i7(void)
+static void fx_xor_i7(void)
 {
    FX_XOR_I(7);
 }
-static INLINE void fx_xor_i8(void)
+static void fx_xor_i8(void)
 {
    FX_XOR_I(8);
 }
-static INLINE void fx_xor_i9(void)
+static void fx_xor_i9(void)
 {
    FX_XOR_I(9);
 }
-static INLINE void fx_xor_i10(void)
+static void fx_xor_i10(void)
 {
    FX_XOR_I(10);
 }
-static INLINE void fx_xor_i11(void)
+static void fx_xor_i11(void)
 {
    FX_XOR_I(11);
 }
-static INLINE void fx_xor_i12(void)
+static void fx_xor_i12(void)
 {
    FX_XOR_I(12);
 }
-static INLINE void fx_xor_i13(void)
+static void fx_xor_i13(void)
 {
    FX_XOR_I(13);
 }
-static INLINE void fx_xor_i14(void)
+static void fx_xor_i14(void)
 {
    FX_XOR_I(14);
 }
-static INLINE void fx_xor_i15(void)
+static void fx_xor_i15(void)
 {
    FX_XOR_I(15);
 }
@@ -2897,70 +2895,70 @@ static INLINE void fx_xor_i15(void)
     CLRFLAGS; \
     R15++
 
-static INLINE void fx_inc_r0(void)
+static void fx_inc_r0(void)
 {
    FX_INC(0);
 }
-static INLINE void fx_inc_r1(void)
+static void fx_inc_r1(void)
 {
    FX_INC(1);
 }
-static INLINE void fx_inc_r2(void)
+static void fx_inc_r2(void)
 {
    FX_INC(2);
 }
-static INLINE void fx_inc_r3(void)
+static void fx_inc_r3(void)
 {
    FX_INC(3);
 }
-static INLINE void fx_inc_r4(void)
+static void fx_inc_r4(void)
 {
    FX_INC(4);
 }
-static INLINE void fx_inc_r5(void)
+static void fx_inc_r5(void)
 {
    FX_INC(5);
 }
-static INLINE void fx_inc_r6(void)
+static void fx_inc_r6(void)
 {
    FX_INC(6);
 }
-static INLINE void fx_inc_r7(void)
+static void fx_inc_r7(void)
 {
    FX_INC(7);
 }
-static INLINE void fx_inc_r8(void)
+static void fx_inc_r8(void)
 {
    FX_INC(8);
 }
-static INLINE void fx_inc_r9(void)
+static void fx_inc_r9(void)
 {
    FX_INC(9);
 }
-static INLINE void fx_inc_r10(void)
+static void fx_inc_r10(void)
 {
    FX_INC(10);
 }
-static INLINE void fx_inc_r11(void)
+static void fx_inc_r11(void)
 {
    FX_INC(11);
 }
-static INLINE void fx_inc_r12(void)
+static void fx_inc_r12(void)
 {
    FX_INC(12);
 }
-static INLINE void fx_inc_r13(void)
+static void fx_inc_r13(void)
 {
    FX_INC(13);
 }
-static INLINE void fx_inc_r14(void)
+static void fx_inc_r14(void)
 {
    FX_INC(14);
    READR14;
 }
 
 /* df - getc - transfer ROM buffer to color register */
-static INLINE void fx_getc(void)
+static void fx_getc(void)
 {
    uint8_t c = GSU.vRomBuffer;
    if (GSU.vPlotOptionReg & 0x04)
@@ -2977,7 +2975,7 @@ static INLINE void fx_getc(void)
 }
 
 /* df(ALT2) - ramb - set current RAM bank */
-static INLINE void fx_ramb(void)
+static void fx_ramb(void)
 {
    GSU.vRamBankReg = SREG & (FX_RAM_BANKS - 1);
    GSU.pvRamBank = GSU.apvRamBank[GSU.vRamBankReg & 0x3];
@@ -2986,7 +2984,7 @@ static INLINE void fx_ramb(void)
 }
 
 /* df(ALT3) - romb - set current ROM bank */
-static INLINE void fx_romb(void)
+static void fx_romb(void)
 {
    GSU.vRomBankReg = USEX8(SREG) & 0x7f;
    GSU.pvRomBank = GSU.apvRomBank[GSU.vRomBankReg];
@@ -3002,70 +3000,70 @@ static INLINE void fx_romb(void)
     CLRFLAGS; \
     R15++
 
-static INLINE void fx_dec_r0(void)
+static void fx_dec_r0(void)
 {
    FX_DEC(0);
 }
-static INLINE void fx_dec_r1(void)
+static void fx_dec_r1(void)
 {
    FX_DEC(1);
 }
-static INLINE void fx_dec_r2(void)
+static void fx_dec_r2(void)
 {
    FX_DEC(2);
 }
-static INLINE void fx_dec_r3(void)
+static void fx_dec_r3(void)
 {
    FX_DEC(3);
 }
-static INLINE void fx_dec_r4(void)
+static void fx_dec_r4(void)
 {
    FX_DEC(4);
 }
-static INLINE void fx_dec_r5(void)
+static void fx_dec_r5(void)
 {
    FX_DEC(5);
 }
-static INLINE void fx_dec_r6(void)
+static void fx_dec_r6(void)
 {
    FX_DEC(6);
 }
-static INLINE void fx_dec_r7(void)
+static void fx_dec_r7(void)
 {
    FX_DEC(7);
 }
-static INLINE void fx_dec_r8(void)
+static void fx_dec_r8(void)
 {
    FX_DEC(8);
 }
-static INLINE void fx_dec_r9(void)
+static void fx_dec_r9(void)
 {
    FX_DEC(9);
 }
-static INLINE void fx_dec_r10(void)
+static void fx_dec_r10(void)
 {
    FX_DEC(10);
 }
-static INLINE void fx_dec_r11(void)
+static void fx_dec_r11(void)
 {
    FX_DEC(11);
 }
-static INLINE void fx_dec_r12(void)
+static void fx_dec_r12(void)
 {
    FX_DEC(12);
 }
-static INLINE void fx_dec_r13(void)
+static void fx_dec_r13(void)
 {
    FX_DEC(13);
 }
-static INLINE void fx_dec_r14(void)
+static void fx_dec_r14(void)
 {
    FX_DEC(14);
    READR14;
 }
 
 /* ef - getb - get byte from ROM at address R14 */
-static INLINE void fx_getb(void)
+static void fx_getb(void)
 {
    uint32_t v = (uint32_t)GSU.vRomBuffer;
    R15++;
@@ -3075,7 +3073,7 @@ static INLINE void fx_getb(void)
 }
 
 /* ef(ALT1) - getbh - get high-byte from ROM at address R14 */
-static INLINE void fx_getbh(void)
+static void fx_getbh(void)
 {
    uint32_t c = USEX8(GSU.vRomBuffer);
    uint32_t v = USEX8(SREG) | (c << 8);
@@ -3086,7 +3084,7 @@ static INLINE void fx_getbh(void)
 }
 
 /* ef(ALT2) - getbl - get low-byte from ROM at address R14 */
-static INLINE void fx_getbl(void)
+static void fx_getbl(void)
 {
    uint32_t c = USEX8(GSU.vRomBuffer);
    uint32_t v = (SREG & 0xff00) | c;
@@ -3097,7 +3095,7 @@ static INLINE void fx_getbl(void)
 }
 
 /* ef(ALT3) - getbs - get sign extended byte from ROM at address R14 */
-static INLINE void fx_getbs(void)
+static void fx_getbs(void)
 {
    uint32_t v = SEX8(GSU.vRomBuffer);
    R15++;
@@ -3118,68 +3116,68 @@ static INLINE void fx_getbs(void)
     GSU.avReg[reg] = v; \
     CLRFLAGS
 
-static INLINE void fx_iwt_r0(void)
+static void fx_iwt_r0(void)
 {
    FX_IWT(0);
 }
-static INLINE void fx_iwt_r1(void)
+static void fx_iwt_r1(void)
 {
    FX_IWT(1);
 }
-static INLINE void fx_iwt_r2(void)
+static void fx_iwt_r2(void)
 {
    FX_IWT(2);
 }
-static INLINE void fx_iwt_r3(void)
+static void fx_iwt_r3(void)
 {
    FX_IWT(3);
 }
-static INLINE void fx_iwt_r4(void)
+static void fx_iwt_r4(void)
 {
    FX_IWT(4);
 }
-static INLINE void fx_iwt_r5(void)
+static void fx_iwt_r5(void)
 {
    FX_IWT(5);
 }
-static INLINE void fx_iwt_r6(void)
+static void fx_iwt_r6(void)
 {
    FX_IWT(6);
 }
-static INLINE void fx_iwt_r7(void)
+static void fx_iwt_r7(void)
 {
    FX_IWT(7);
 }
-static INLINE void fx_iwt_r8(void)
+static void fx_iwt_r8(void)
 {
    FX_IWT(8);
 }
-static INLINE void fx_iwt_r9(void)
+static void fx_iwt_r9(void)
 {
    FX_IWT(9);
 }
-static INLINE void fx_iwt_r10(void)
+static void fx_iwt_r10(void)
 {
    FX_IWT(10);
 }
-static INLINE void fx_iwt_r11(void)
+static void fx_iwt_r11(void)
 {
    FX_IWT(11);
 }
-static INLINE void fx_iwt_r12(void)
+static void fx_iwt_r12(void)
 {
    FX_IWT(12);
 }
-static INLINE void fx_iwt_r13(void)
+static void fx_iwt_r13(void)
 {
    FX_IWT(13);
 }
-static INLINE void fx_iwt_r14(void)
+static void fx_iwt_r14(void)
 {
    FX_IWT(14);
    READR14;
 }
-static INLINE void fx_iwt_r15(void)
+static void fx_iwt_r15(void)
 {
    FX_IWT(15);
 }
@@ -3197,68 +3195,68 @@ static INLINE void fx_iwt_r15(void)
     GSU.avReg[reg] |= USEX8(RAM(GSU.vLastRamAdr ^ 1)) << 8; \
     CLRFLAGS
 
-static INLINE void fx_lm_r0(void)
+static void fx_lm_r0(void)
 {
    FX_LM(0);
 }
-static INLINE void fx_lm_r1(void)
+static void fx_lm_r1(void)
 {
    FX_LM(1);
 }
-static INLINE void fx_lm_r2(void)
+static void fx_lm_r2(void)
 {
    FX_LM(2);
 }
-static INLINE void fx_lm_r3(void)
+static void fx_lm_r3(void)
 {
    FX_LM(3);
 }
-static INLINE void fx_lm_r4(void)
+static void fx_lm_r4(void)
 {
    FX_LM(4);
 }
-static INLINE void fx_lm_r5(void)
+static void fx_lm_r5(void)
 {
    FX_LM(5);
 }
-static INLINE void fx_lm_r6(void)
+static void fx_lm_r6(void)
 {
    FX_LM(6);
 }
-static INLINE void fx_lm_r7(void)
+static void fx_lm_r7(void)
 {
    FX_LM(7);
 }
-static INLINE void fx_lm_r8(void)
+static void fx_lm_r8(void)
 {
    FX_LM(8);
 }
-static INLINE void fx_lm_r9(void)
+static void fx_lm_r9(void)
 {
    FX_LM(9);
 }
-static INLINE void fx_lm_r10(void)
+static void fx_lm_r10(void)
 {
    FX_LM(10);
 }
-static INLINE void fx_lm_r11(void)
+static void fx_lm_r11(void)
 {
    FX_LM(11);
 }
-static INLINE void fx_lm_r12(void)
+static void fx_lm_r12(void)
 {
    FX_LM(12);
 }
-static INLINE void fx_lm_r13(void)
+static void fx_lm_r13(void)
 {
    FX_LM(13);
 }
-static INLINE void fx_lm_r14(void)
+static void fx_lm_r14(void)
 {
    FX_LM(14);
    READR14;
 }
-static INLINE void fx_lm_r15(void)
+static void fx_lm_r15(void)
 {
    FX_LM(15);
 }
@@ -3278,67 +3276,67 @@ static INLINE void fx_lm_r15(void)
     CLRFLAGS; \
     R15++
 
-static INLINE void fx_sm_r0(void)
+static void fx_sm_r0(void)
 {
    FX_SM(0);
 }
-static INLINE void fx_sm_r1(void)
+static void fx_sm_r1(void)
 {
    FX_SM(1);
 }
-static INLINE void fx_sm_r2(void)
+static void fx_sm_r2(void)
 {
    FX_SM(2);
 }
-static INLINE void fx_sm_r3(void)
+static void fx_sm_r3(void)
 {
    FX_SM(3);
 }
-static INLINE void fx_sm_r4(void)
+static void fx_sm_r4(void)
 {
    FX_SM(4);
 }
-static INLINE void fx_sm_r5(void)
+static void fx_sm_r5(void)
 {
    FX_SM(5);
 }
-static INLINE void fx_sm_r6(void)
+static void fx_sm_r6(void)
 {
    FX_SM(6);
 }
-static INLINE void fx_sm_r7(void)
+static void fx_sm_r7(void)
 {
    FX_SM(7);
 }
-static INLINE void fx_sm_r8(void)
+static void fx_sm_r8(void)
 {
    FX_SM(8);
 }
-static INLINE void fx_sm_r9(void)
+static void fx_sm_r9(void)
 {
    FX_SM(9);
 }
-static INLINE void fx_sm_r10(void)
+static void fx_sm_r10(void)
 {
    FX_SM(10);
 }
-static INLINE void fx_sm_r11(void)
+static void fx_sm_r11(void)
 {
    FX_SM(11);
 }
-static INLINE void fx_sm_r12(void)
+static void fx_sm_r12(void)
 {
    FX_SM(12);
 }
-static INLINE void fx_sm_r13(void)
+static void fx_sm_r13(void)
 {
    FX_SM(13);
 }
-static INLINE void fx_sm_r14(void)
+static void fx_sm_r14(void)
 {
    FX_SM(14);
 }
-static INLINE void fx_sm_r15(void)
+static void fx_sm_r15(void)
 {
    FX_SM(15);
 }

@@ -5,8 +5,7 @@
 
 #include <limits.h>
 #include <string.h>
-#include <sys/types.h>
-#include <retro_inline.h>
+#include "my_types.h"
 
 #ifdef PSP
 #define PIXEL_FORMAT BGR555
@@ -59,14 +58,12 @@
 #define FAST_ALIGNED_LSB_WORD_ACCESS
 #endif
 
-#include <libretro.h>
-
 #define ABS(X)   ((X) <  0  ? -(X) : (X))
 #define MIN(A,B) ((A) < (B) ?  (A) : (B))
 #define MAX(A,B) ((A) > (B) ?  (A) : (B))
 
 /* Integer square root by Halleck's method, with Legalize's speedup */
-static INLINE int32_t _isqrt(int32_t val)
+static int32_t _isqrt(int32_t val)
 {
    int32_t squaredbit, remainder, root;
 

@@ -3,16 +3,52 @@
 #include "dsp4.h"
 #include "memmap.h"
 
-#define DSP4_READ_WORD(x) \
-   READ_WORD(DSP4.parameters+x)
-
-#define DSP4_WRITE_WORD(x,d) \
-   WRITE_WORD(DSP4.output+x,d);
-
-/* used to wait for dsp i/o */
-#define DSP4_WAIT(x) \
-    DSP4_Logic = x; \
-    return
+int16_t project_focaly;
+int16_t raster;
+int16_t viewport_top;
+int16_t viewport_bottom;
+int16_t project_x1low;
+int16_t project_focalx;
+int16_t project_centerx;
+int16_t project_ptr;
+int16_t view_plane;
+int16_t project_y;
+int16_t project_x;
+int16_t project_pitchylow;
+int16_t project_pitchy;
+int16_t project_pitchxlow;
+int16_t project_pitchx;
+int16_t far_plane;
+int16_t project_y1low;
+int16_t multi_index1;
+int16_t multi_index2;
+int16_t far_plane;
+int16_t project_x1;
+int16_t project_y1;
+int16_t segments;
+int16_t multi_focaly[64];
+int16_t multi_farplane[4];
+int16_t multi_raster[4]; 
+int16_t project_x2;
+int16_t project_y2;
+int16_t path_clipRight[4];
+int16_t path_clipLeft[4];
+int16_t path_pos[4];
+int16_t path_ptr[4];
+int16_t path_raster[4];
+int16_t path_top[4];
+int16_t path_y[2];
+int16_t path_x[2];
+int16_t path_plane[2];
+int16_t center_x;
+int16_t center_y;
+int16_t viewport_left;
+int16_t viewport_right;
+int16_t sprite_x;
+int16_t sprite_y;
+int16_t sprite_offset;
+int8_t sprite_type;
+bool sprite_size;
 
 int32_t DSP4_Multiply(int16_t Multiplicand, int16_t Multiplier)
 {

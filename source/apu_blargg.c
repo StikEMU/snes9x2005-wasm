@@ -8,8 +8,6 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#include <retro_inline.h>
-
 #include "blargg_endian.h"
 #include "apu_blargg.h"
 
@@ -101,7 +99,7 @@ static int16_t gauss [512] =
 
 /* Gaussian interpolation */
 
-static INLINE int32_t dsp_interpolate( dsp_voice_t *v )
+static int32_t dsp_interpolate( dsp_voice_t *v )
 {
    int32_t offset, out, *in;
    int16_t *fwd, *rev;
@@ -169,7 +167,7 @@ static uint32_t const counter_offsets [32] =
 
 /* Envelope */
 
-static INLINE void dsp_run_envelope( dsp_voice_t* const v )
+static void dsp_run_envelope( dsp_voice_t* const v )
 {
    int32_t env, rate, env_data;
 
@@ -243,7 +241,7 @@ static INLINE void dsp_run_envelope( dsp_voice_t* const v )
 
 /* BRR Decoding */
 
-static INLINE void dsp_decode_brr( dsp_voice_t* v )
+static void dsp_decode_brr( dsp_voice_t* v )
 {
    int32_t nybbles, *pos, *end, header;
 
@@ -318,7 +316,7 @@ static INLINE void dsp_decode_brr( dsp_voice_t* v )
    if ( (dsp_m.every_other_sample ^= 1) != 0 ) \
       dsp_m.new_kon &= ~dsp_m.kon; /* clears KON 63 clocks after it was last read */
 
-static INLINE void dsp_misc_30()
+static void dsp_misc_30()
 {
    if ( dsp_m.every_other_sample )
    {
@@ -338,13 +336,13 @@ static INLINE void dsp_misc_30()
 
 /* Voices */
 
-static INLINE void dsp_voice_V1( dsp_voice_t* const v )
+static void dsp_voice_V1( dsp_voice_t* const v )
 {
    dsp_m.t_dir_addr = dsp_m.t_dir * 0x100 + dsp_m.t_srcn * 4;
    dsp_m.t_srcn = v->regs[V_SRCN];
 }
 
-static INLINE void dsp_voice_V2( dsp_voice_t* const v )
+static void dsp_voice_V2( dsp_voice_t* const v )
 {
    uint8_t *entry;
 
@@ -360,12 +358,12 @@ static INLINE void dsp_voice_V2( dsp_voice_t* const v )
    dsp_m.t_pitch = v->regs [V_PITCHL];
 }
 
-static INLINE void dsp_voice_V3a( dsp_voice_t* const v )
+static void dsp_voice_V3a( dsp_voice_t* const v )
 {
    dsp_m.t_pitch += (v->regs [V_PITCHH] & 0x3F) << 8;
 }
 
-static INLINE void dsp_voice_V3b( dsp_voice_t* const v )
+static void dsp_voice_V3b( dsp_voice_t* const v )
 {
    dsp_m.t_brr_byte = dsp_m.ram [(v->brr_addr + v->brr_offset) & 0xffff];
    dsp_m.t_brr_header = dsp_m.ram [v->brr_addr];
@@ -451,7 +449,7 @@ static void dsp_voice_V3c( dsp_voice_t* const v )
    }
 }
 
-static INLINE void dsp_voice_output( dsp_voice_t const* v, int32_t ch )
+static void dsp_voice_output( dsp_voice_t const* v, int32_t ch )
 {
    int32_t amp;
 
@@ -470,7 +468,7 @@ static INLINE void dsp_voice_output( dsp_voice_t const* v, int32_t ch )
    }
 }
 
-static INLINE void dsp_voice_V4( dsp_voice_t* const v )
+static void dsp_voice_V4( dsp_voice_t* const v )
 {
    /* Decode BRR */
    dsp_m.t_looped = 0;
@@ -502,7 +500,7 @@ static INLINE void dsp_voice_V4( dsp_voice_t* const v )
    dsp_voice_output( v, 0 );
 }
 
-static INLINE void dsp_voice_V5( dsp_voice_t* const v )
+static void dsp_voice_V5( dsp_voice_t* const v )
 {
    int32_t endx_buf;
    /* Output right */
@@ -517,13 +515,13 @@ static INLINE void dsp_voice_V5( dsp_voice_t* const v )
    dsp_m.endx_buf = (uint8_t) endx_buf;
 }
 
-static INLINE void dsp_voice_V6( dsp_voice_t* const v )
+static void dsp_voice_V6( dsp_voice_t* const v )
 {
    (void) v; /* avoid compiler warning about unused v */
    dsp_m.outx_buf = (uint8_t) (dsp_m.t_output >> 8);
 }
 
-static INLINE void dsp_voice_V7( dsp_voice_t* const v )
+static void dsp_voice_V7( dsp_voice_t* const v )
 {
    /* Update ENDX */
    dsp_m.regs[R_ENDX] = dsp_m.endx_buf;
@@ -531,20 +529,20 @@ static INLINE void dsp_voice_V7( dsp_voice_t* const v )
    dsp_m.envx_buf = v->t_envx_out;
 }
 
-static INLINE void dsp_voice_V8( dsp_voice_t* const v )
+static void dsp_voice_V8( dsp_voice_t* const v )
 {
    /* Update OUTX */
    v->regs [V_OUTX] = dsp_m.outx_buf;
 }
 
-static INLINE void dsp_voice_V9( dsp_voice_t* const v )
+static void dsp_voice_V9( dsp_voice_t* const v )
 {
    v->regs [V_ENVX] = dsp_m.envx_buf;
 }
 
 /* Most voices do all these in one clock, so make a handy composite */
 
-static INLINE void dsp_voice_V3( dsp_voice_t* const v )
+static void dsp_voice_V3( dsp_voice_t* const v )
 {
    dsp_voice_V3a( v );
    dsp_voice_V3b( v );
@@ -552,7 +550,7 @@ static INLINE void dsp_voice_V3( dsp_voice_t* const v )
 }
 
 /* Common combinations of voice steps on different voices. This greatly reduces
-   code size and allows everything to be INLINEd in these functions. */
+   code size and allows everything to bed in these functions. */
 
 static void dsp_voice_V7_V4_V1( dsp_voice_t* const v )
 {
@@ -597,7 +595,7 @@ static void dsp_voice_V9_V6_V3( dsp_voice_t* const v )
    ECHO_FIR( 0 ) [ch] = ECHO_FIR( 8 ) [ch] = s >> 1; \
 }
 
-static INLINE void dsp_echo_22()
+static void dsp_echo_22()
 {
    int32_t l, r;
 
@@ -615,7 +613,7 @@ static INLINE void dsp_echo_22()
    dsp_m.t_echo_in [1] = r;
 }
 
-static INLINE void dsp_echo_23()
+static void dsp_echo_23()
 {
    int32_t l, r;
 
@@ -628,7 +626,7 @@ static INLINE void dsp_echo_23()
    ECHO_READ(1);
 }
 
-static INLINE void dsp_echo_24()
+static void dsp_echo_24()
 {
    int32_t l, r;
 
@@ -639,7 +637,7 @@ static INLINE void dsp_echo_24()
    dsp_m.t_echo_in [1] += r;
 }
 
-static INLINE void dsp_echo_25()
+static void dsp_echo_25()
 {
    int32_t l = dsp_m.t_echo_in [0] + (((dsp_m.echo_hist_pos [6 + 1]) [0] * (int8_t) dsp_m.regs [R_FIR + 6 * 0x10]) >> 6);
    int32_t r = dsp_m.t_echo_in [1] + (((dsp_m.echo_hist_pos [6 + 1]) [1] * (int8_t) dsp_m.regs [R_FIR + 6 * 0x10]) >> 6);
@@ -665,7 +663,7 @@ static INLINE void dsp_echo_25()
    CLAMP16( var ); \
 }
 
-static INLINE void dsp_echo_26()
+static void dsp_echo_26()
 {
    int32_t l, r;
 
@@ -681,7 +679,7 @@ static INLINE void dsp_echo_26()
    dsp_m.t_echo_out [1] = r & ~1;
 }
 
-static INLINE void dsp_echo_27()
+static void dsp_echo_27()
 {
    int32_t l, r;
    int16_t *out;
@@ -724,7 +722,7 @@ static INLINE void dsp_echo_27()
    } \
    dsp_m.t_echo_out [ch] = 0;
 
-static INLINE void dsp_echo_29()
+static void dsp_echo_29()
 {
    dsp_m.t_esa = dsp_m.regs [R_ESA];
 
@@ -1245,7 +1243,7 @@ void spc_enable_rom( int32_t enable )
       dsp_run( clock_count ); \
    }
 
-static INLINE void spc_dsp_write( int32_t data, int32_t time )
+static void spc_dsp_write( int32_t data, int32_t time )
 {
    int32_t addr;
    (void) time;
@@ -1389,7 +1387,7 @@ static void spc_cpu_write( int32_t data, uint16_t addr, int32_t time )
             if ( reg != 2 && reg != 4 && reg != 5 && reg != 6 && reg != 7 )
             TODO: this is a bit on the fragile side */
 
-         if ( ((~0x2F00 << 16) << reg) < 0 ) /* 36% */
+         if ( ((((unsigned int)~0x2F00) << 16) << reg) < 0 ) /* 36% */
          {
             if ( reg == R_DSPDATA ) /* 99% */
             {
@@ -1666,7 +1664,7 @@ loop:
                     m.smp_regs[0][i] = (uint8_t) data;
 
                     /* Registers other than $F2 and $F4-$F7 */
-                    if ( ((~0x2F00 << 16) << i) < 0 ) /* 12% */
+                    if ( ((((unsigned int)~0x2F00) << 16) << i) < 0 ) /* 12% */
                     {
                        if ( i == R_DSPDATA ) /* 99% */
                        {
@@ -2866,7 +2864,6 @@ static int32_t		lag_master      = 0;
 static int32_t		lag             = 0;
 
 static int16_t*		landing_buffer = NULL;
-
 static bool			resampler      = false;
 
 static int32_t		reference_time;
@@ -2897,7 +2894,7 @@ static int32_t  r_left[4], r_right[4];
 #define CLAMP(x, low, high) (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
 #define SHORT_CLAMP(n) ((int16_t) CLAMP((n), -32768, 32767))
 
-static INLINE int32_t hermite (int32_t mu1, int32_t a, int32_t b, int32_t c, int32_t d)
+static int32_t hermite (int32_t mu1, int32_t a, int32_t b, int32_t c, int32_t d)
 {
    int32_t mu2, mu3, m0, m1, a0, a1, a2, a3;
 
@@ -3028,7 +3025,7 @@ static void resampler_new(int32_t num_samples)
    resampler_clear();
 }
 
-static INLINE bool resampler_push(int16_t *src, int32_t num_samples)
+static bool resampler_push(int16_t *src, int32_t num_samples)
 {
    int32_t end, first_write_size;
    uint8_t *src_ring;
@@ -3051,7 +3048,7 @@ static INLINE bool resampler_push(int16_t *src, int32_t num_samples)
    return true;
 }
 
-static INLINE void resampler_resize (int32_t num_samples)
+static void resampler_resize (int32_t num_samples)
 {
    (void) num_samples;
    free(rb_buffer);
@@ -3363,7 +3360,7 @@ void S9xAPUExecute()
    reference_time = CPU.Cycles;
 
    if (SPC_SAMPLE_COUNT() >= APU_MINIMUM_SAMPLE_BLOCK || !sound_in_sync)
-      sa_callback();
+      if(sa_callback)sa_callback();
 }
 
 void S9xAPUTimingSetSpeedup (int32_t ticks)

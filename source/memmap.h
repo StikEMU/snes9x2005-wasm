@@ -38,6 +38,7 @@ bool LoadROM(const struct retro_game_info* game);
 #else
 bool LoadROM(const char*);
 #endif
+bool LoadROMFromBuffer(unsigned char *rom, unsigned int romLength);
 void InitROM(bool);
 bool S9xInitMemory(void);
 void S9xDeinitMemory(void);

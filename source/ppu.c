@@ -1983,9 +1983,8 @@ void S9xUpdateJustifiers()
    in_bit = 0;
    justifiers = 0xFFFF00AA;
 
-   offscreen = JustifierOffscreen();
+   offscreen = false;
 
-   JustifierButtons(&justifiers);
    last_p1 = !last_p1;
 
    if (!last_p1)

@@ -17,7 +17,7 @@
 #define BLARGG_NONPORTABLE 1
 #endif
 
-#include <boolean.h>
+#include <stdbool.h>
 
 #include <stdint.h>
 
