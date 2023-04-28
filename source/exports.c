@@ -20,6 +20,8 @@ float *f32soundBuffer = NULL;
 int16_t *i16soundBuffer = NULL;
 unsigned int sramDestSize;
 unsigned char *sramDest;
+int16_t *mixSamplesBuffer = NULL;
+unsigned int mixSamplesCount = 0;
 
 EMSCRIPTEN_KEEPALIVE
 void setJoypadInput(int32_t input){
@@ -58,9 +60,19 @@ void my_free(unsigned char *ptr){
     free(ptr);
 }
 
+#ifdef USE_BLARGG_APU
 void S9xSoundCallback(void){
-    //S9xClearSamples();
+    S9xFinalizeSamples();
+    unsigned int available_samples = S9xGetSampleCount();
+    //printf("available_samples = %d\n", available_samples);
+    if(available_samples > mixSamplesCount){
+        mixSamplesCount = available_samples;
+        if(mixSamplesBuffer)free(mixSamplesBuffer);
+        mixSamplesBuffer = (int16_t*)calloc(mixSamplesCount * 2, sizeof(int16_t));
+    }
+    S9xMixSamples(mixSamplesBuffer, available_samples);
 }
+#endif
 
 static void init_sfc_setting(unsigned int sampleRate)
 {
@@ -93,6 +105,13 @@ static void init_sfc_setting(unsigned int sampleRate)
 
 EMSCRIPTEN_KEEPALIVE
 void startWithRom(unsigned char *rom, unsigned int romLength, unsigned int sampleRate){
+    if(runGameFlag){
+        //SRAM初期化
+        if(Memory.SRAM)memset(Memory.SRAM, 0, 0x20000);
+        LoadROMFromBuffer(rom, romLength);
+        CommonS9xReset();
+        return;
+    }
     memset(&Settings, 0, sizeof(Settings));
     //TO DO:
     //Settingsの設定が不足かも
@@ -107,9 +126,14 @@ void startWithRom(unsigned char *rom, unsigned int romLength, unsigned int sampl
     init_sfc_setting(sampleRate);
     S9xInitMemory();
     S9xInitAPU();
-    //S9xInitSound(64, 0);//64ミリ秒のバッファ
+    #ifdef USE_BLARGG_APU
+    S9xInitSound(64, 0);//64ミリ秒のバッファ
+    #else
     S9xInitSound();
-    //S9xSetSamplesAvailableCallback(S9xSoundCallback);
+    #endif
+    #ifdef USE_BLARGG_APU
+    S9xSetSamplesAvailableCallback(S9xSoundCallback);
+    #endif
     S9xInitDisplay();
     S9xInitGFX();
     //コントローラー

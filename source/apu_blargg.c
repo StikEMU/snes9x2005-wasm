@@ -1387,7 +1387,8 @@ static void spc_cpu_write( int32_t data, uint16_t addr, int32_t time )
             if ( reg != 2 && reg != 4 && reg != 5 && reg != 6 && reg != 7 )
             TODO: this is a bit on the fragile side */
 
-         if ( ((((unsigned int)~0x2F00) << 16) << reg) < 0 ) /* 36% */
+         //if ( (((unsigned int)~0x2F00 << 16) << reg) < 0 ) /* 36% */
+         if ( ((~0x2F00 << 16) << reg) < 0 )
          {
             if ( reg == R_DSPDATA ) /* 99% */
             {
@@ -1664,7 +1665,8 @@ loop:
                     m.smp_regs[0][i] = (uint8_t) data;
 
                     /* Registers other than $F2 and $F4-$F7 */
-                    if ( ((((unsigned int)~0x2F00) << 16) << i) < 0 ) /* 12% */
+                    //if ( ((((unsigned int)~0x2F00) << 16) << i) < 0 ) /* 12% */
+                    if ( ((~0x2F00 << 16) << i) < 0 )
                     {
                        if ( i == R_DSPDATA ) /* 99% */
                        {
