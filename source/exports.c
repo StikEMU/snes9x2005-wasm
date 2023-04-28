@@ -17,11 +17,13 @@ int joyPadInput = 0;
 bool runGameFlag = false;
 unsigned char *rgba8ScreenBuffer = NULL;
 float *f32soundBuffer = NULL;
-int16_t *i16soundBuffer = NULL;
 unsigned int sramDestSize;
 unsigned char *sramDest;
 int16_t *mixSamplesBuffer = NULL;
 unsigned int mixSamplesCount = 0;
+int16_t *outToExternalBuffer = NULL;
+unsigned int outToExternalBufferSamplePos = 0;
+unsigned int soundBufferOutPos = 0;
 
 EMSCRIPTEN_KEEPALIVE
 void setJoypadInput(int32_t input){
@@ -63,14 +65,24 @@ void my_free(unsigned char *ptr){
 #ifdef USE_BLARGG_APU
 void S9xSoundCallback(void){
     S9xFinalizeSamples();
-    unsigned int available_samples = S9xGetSampleCount();
-    //printf("available_samples = %d\n", available_samples);
+    if(!outToExternalBuffer)outToExternalBuffer = (int16_t*)calloc(4096 * 2, sizeof(int16_t));
+    unsigned int available_samples = S9xGetSampleCount() / 2;
     if(available_samples > mixSamplesCount){
         mixSamplesCount = available_samples;
         if(mixSamplesBuffer)free(mixSamplesBuffer);
         mixSamplesBuffer = (int16_t*)calloc(mixSamplesCount * 2, sizeof(int16_t));
     }
-    S9xMixSamples(mixSamplesBuffer, available_samples);
+    S9xMixSamples(mixSamplesBuffer, available_samples * 2);
+    /*unsigned int nextPos = outToExternalBufferSamplePos + available_samples;
+    if(nextPos > 4095){//(一周して)soundBufferOutPosに追いつかないようにチェック
+        if(nextPos > soundBufferOutPos + 4096)return;
+    }else{
+        if(nextPos > soundBufferOutPos)return;
+    }*/
+    for(unsigned int i = 0;i < available_samples * 2; i++){
+        outToExternalBuffer[(outToExternalBufferSamplePos * 2 + i) % 8192] = mixSamplesBuffer[i];
+    }
+    outToExternalBufferSamplePos = (outToExternalBufferSamplePos + available_samples) % 4096;
 }
 #endif
 
@@ -127,7 +139,8 @@ void startWithRom(unsigned char *rom, unsigned int romLength, unsigned int sampl
     S9xInitMemory();
     S9xInitAPU();
     #ifdef USE_BLARGG_APU
-    S9xInitSound(64, 0);//64ミリ秒のバッファ
+    //S9xInitSound(64, 0);//64ミリ秒のバッファ
+    S9xInitSound(0, 0);//初期設定?
     #else
     S9xInitSound();
     #endif
@@ -173,17 +186,56 @@ uint8_t *getScreenBuffer(void){
     return rgba8ScreenBuffer;
 }
 
-EMSCRIPTEN_KEEPALIVE
-float *getSoundBuffer(unsigned int size){
-    if(!f32soundBuffer)f32soundBuffer = (float*)calloc(size * 2, sizeof(float));
-    if(!i16soundBuffer)i16soundBuffer = (int16_t*)calloc(size * 2, sizeof(int16_t));
-    S9xMixSamples(i16soundBuffer, size);
-    for(unsigned int i = 0;i < 2;i++){
-        //for(unsigned int j = 0;j < size;j++)f32soundBuffer[i * size + j] = landing_buffer[j * 2 + i] / (float)0x8000;
-        for(unsigned int j = 0;j < size;j++)f32soundBuffer[i * size + j] = i16soundBuffer[j * 2 + i];
+/*EMSCRIPTEN_KEEPALIVE
+float *getSoundBuffer(){
+    printf("outToExternalBufferIndex = %d\n", outToExternalBufferIndex);
+    if(!outToExternalBuffer)outToExternalBuffer = (int16_t*)calloc(4096 * 2, sizeof(int16_t));
+    if(!f32soundBuffer)f32soundBuffer = (float*)calloc(2048 * 2, sizeof(float));
+    if(outToExternalBufferIndex == 0){
+        if(outToExternalBufferSamplePos < 2048)return f32soundBuffer;
+    }else{
+        if(outToExternalBufferSamplePos >= 2048)return f32soundBuffer;
+    }
+    for(unsigned int i = 0;i < 2048;i++){
+        for(unsigned int j = 0;j < 2;j++)f32soundBuffer[j * 2048 + i] = outToExternalBuffer[outToExternalBufferIndex * 4096 + 2 * i + j] / ((float)(0x8000));
+    }
+    if(outToExternalBufferIndex == 0){
+        outToExternalBufferIndex = 1;
+    }else{
+        outToExternalBufferIndex = 0;
     }
     return f32soundBuffer;
+}*/
+
+/*EMSCRIPTEN_KEEPALIVE
+float *getSoundBuffer(){
+    if(!outToExternalBuffer)outToExternalBuffer = (int16_t*)calloc(4096 * 2, sizeof(int16_t));
+    if(!f32soundBuffer)f32soundBuffer = (float*)calloc(2048 * 2, sizeof(float));
+    unsigned int soundBufferInPos = outToExternalBufferSamplePos;
+    if(outToExternalBufferSamplePos < soundBufferOutPos)soundBufferInPos += 4096;
+    if(soundBufferOutPos + 2048 > soundBufferInPos)return f32soundBuffer;
+    soundBufferOutPos += 2048;
+    for(unsigned int i = 0;i < 2048;i++){
+        for(unsigned int j = 0;j < 2;j++)f32soundBuffer[j * 2048 + i] = outToExternalBuffer[(soundBufferOutPos * 2 + i * 2 + j) % 8192] / ((float)(0x8000));
+    }
+    return f32soundBuffer;
+}*/
+EMSCRIPTEN_KEEPALIVE
+float *getSoundBuffer(){
+    if(!outToExternalBuffer)outToExternalBuffer = (int16_t*)calloc(4096 * 2, sizeof(int16_t));
+    if(!f32soundBuffer)f32soundBuffer = (float*)calloc(2048 * 2, sizeof(float));
+    if(soundBufferOutPos < 2048){
+        if(outToExternalBufferSamplePos < 2048)return f32soundBuffer;//getSoundBufferが呼ばれすぎてS9xSoundCallbackによって生成された音声データに追いついた
+    }else{
+        if(outToExternalBufferSamplePos >= 2048)return f32soundBuffer;//getSoundBufferが呼ばれすぎてS9xSoundCallbackによって生成された音声データに追いついた
+    }
+    for(unsigned int i = 0;i < 2048;i++){
+        for(unsigned int j = 0;j < 2;j++)f32soundBuffer[j * 2048 + i] = outToExternalBuffer[(soundBufferOutPos * 2 + i * 2 + j) % 8192] / ((float)(0x8000));
+    }
+    soundBufferOutPos = (soundBufferOutPos + 2048) % 4096;
+    return f32soundBuffer;
 }
+
 
 EMSCRIPTEN_KEEPALIVE
 void saveSramRequest(void){
