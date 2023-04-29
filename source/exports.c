@@ -22,8 +22,9 @@ unsigned char *sramDest;
 int16_t *mixSamplesBuffer = NULL;
 unsigned int mixSamplesCount = 0;
 int16_t *outToExternalBuffer = NULL;
-unsigned int outToExternalBufferSamplePos = 0;
+unsigned int outToExternalBufferSamplePos = 2048;
 unsigned int soundBufferOutPos = 0;
+unsigned int soundBufferStuckCount = 0;
 
 EMSCRIPTEN_KEEPALIVE
 void setJoypadInput(int32_t input){
@@ -64,6 +65,7 @@ void my_free(unsigned char *ptr){
 
 #ifdef USE_BLARGG_APU
 void S9xSoundCallback(void){
+    //printf("outToExternalBufferSamplePos = %d\n", outToExternalBufferSamplePos);
     S9xFinalizeSamples();
     if(!outToExternalBuffer)outToExternalBuffer = (int16_t*)calloc(4096 * 2, sizeof(int16_t));
     unsigned int available_samples = S9xGetSampleCount() / 2;
@@ -73,12 +75,12 @@ void S9xSoundCallback(void){
         mixSamplesBuffer = (int16_t*)calloc(mixSamplesCount * 2, sizeof(int16_t));
     }
     S9xMixSamples(mixSamplesBuffer, available_samples * 2);
-    /*unsigned int nextPos = outToExternalBufferSamplePos + available_samples;
-    if(nextPos > 4095){//(一周して)soundBufferOutPosに追いつかないようにチェック
-        if(nextPos > soundBufferOutPos + 4096)return;
+    unsigned int nextPos = (outToExternalBufferSamplePos + available_samples) % 4096;
+    if(soundBufferOutPos >= 2048){
+        if(outToExternalBufferSamplePos <= 2048 && nextPos >= 2048)return;
     }else{
-        if(nextPos > soundBufferOutPos)return;
-    }*/
+        if(outToExternalBufferSamplePos > 2048 && nextPos <= 2048)return;
+    }
     for(unsigned int i = 0;i < available_samples * 2; i++){
         outToExternalBuffer[(outToExternalBufferSamplePos * 2 + i) % 8192] = mixSamplesBuffer[i];
     }
@@ -220,8 +222,25 @@ float *getSoundBuffer(){
     }
     return f32soundBuffer;
 }*/
+
+void resetSoundBuffer(){
+    soundBufferOutPos = 0;
+    outToExternalBufferSamplePos = 0;
+    memset(outToExternalBuffer, 0, 4096 * 2 * sizeof(int16_t));
+    return;
+}
+
 EMSCRIPTEN_KEEPALIVE
 float *getSoundBuffer(){
+    if(soundBufferStuckCount >= 5){//応急処置
+        printf("soundbuffer stuck!!\n");
+        printf("outToExternalBufferSamplePos = %d\n", outToExternalBufferSamplePos);
+        printf("soundBufferOutPos = %d\n", soundBufferOutPos);
+        soundBufferStuckCount = 0;
+        resetSoundBuffer();
+    }
+    soundBufferStuckCount++;
+    //printf("soundBufferOutPos = %d\n", soundBufferOutPos);
     if(!outToExternalBuffer)outToExternalBuffer = (int16_t*)calloc(4096 * 2, sizeof(int16_t));
     if(!f32soundBuffer)f32soundBuffer = (float*)calloc(2048 * 2, sizeof(float));
     if(soundBufferOutPos < 2048){
@@ -233,6 +252,7 @@ float *getSoundBuffer(){
         for(unsigned int j = 0;j < 2;j++)f32soundBuffer[j * 2048 + i] = outToExternalBuffer[(soundBufferOutPos * 2 + i * 2 + j) % 8192] / ((float)(0x8000));
     }
     soundBufferOutPos = (soundBufferOutPos + 2048) % 4096;
+    soundBufferStuckCount = 0;
     return f32soundBuffer;
 }
 
