@@ -2849,7 +2849,7 @@ void spc_copy_state( uint8_t ** io, dsp_copy_func_t copy )
  APU
 ***********************************************************************************/
 
-#define APU_DEFAULT_INPUT_RATE		32040
+#define APU_DEFAULT_INPUT_RATE		36000
 #define APU_MINIMUM_SAMPLE_COUNT	(512*8)
 #define APU_MINIMUM_SAMPLE_BLOCK	(128*8)
 #define APU_NUMERATOR_NTSC		15664
@@ -3176,8 +3176,8 @@ bool S9xInitSound (int32_t buffer_ms, int32_t lag_ms)
       lag_ms    : allowable time-lag given in millisecond */
    int32_t sample_count, lag_sample_count;
 
-   sample_count     = buffer_ms * 32040 / 1000;
-   lag_sample_count = lag_ms    * 32040 / 1000;
+   sample_count     = buffer_ms * 36000 / 1000;
+   lag_sample_count = lag_ms    * 36000 / 1000;
 
    lag_master = lag_sample_count;
 

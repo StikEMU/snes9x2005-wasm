@@ -211,7 +211,7 @@ void S9xSetEchoFeedback(int32_t feedback)
 
 void S9xSetEchoDelay(int32_t delay)
 {
-   SoundData.echo_buffer_size = (512 * delay * so.playback_rate) / 32040;
+   SoundData.echo_buffer_size = (512 * delay * so.playback_rate) / 36000;
    SoundData.echo_buffer_size <<= 1;
    if (SoundData.echo_buffer_size)
       SoundData.echo_ptr %= SoundData.echo_buffer_size;

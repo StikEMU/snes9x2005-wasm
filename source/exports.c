@@ -86,6 +86,28 @@ void S9xSoundCallback(void){
     }
     outToExternalBufferSamplePos = (outToExternalBufferSamplePos + available_samples) % 4096;
 }
+#else
+void S9xSoundCallback(void){
+    //printf("outToExternalBufferSamplePos = %d\n", outToExternalBufferSamplePos);
+    if(!outToExternalBuffer)outToExternalBuffer = (int16_t*)calloc(4096 * 2, sizeof(int16_t));
+    unsigned int available_samples = 600;
+    if(available_samples > mixSamplesCount){
+        mixSamplesCount = available_samples;
+        if(mixSamplesBuffer)free(mixSamplesBuffer);
+        mixSamplesBuffer = (int16_t*)calloc(mixSamplesCount * 2, sizeof(int16_t));
+    }
+    S9xMixSamples(mixSamplesBuffer, available_samples * 2);
+    unsigned int nextPos = (outToExternalBufferSamplePos + available_samples) % 4096;
+    if(soundBufferOutPos >= 2048){
+        if(outToExternalBufferSamplePos <= 2048 && nextPos >= 2048)return;
+    }else{
+        if(outToExternalBufferSamplePos > 2048 && nextPos <= 2048)return;
+    }
+    for(unsigned int i = 0;i < available_samples * 2; i++){
+        outToExternalBuffer[(outToExternalBufferSamplePos * 2 + i) % 8192] = mixSamplesBuffer[i];
+    }
+    outToExternalBufferSamplePos = (outToExternalBufferSamplePos + available_samples) % 4096;
+}
 #endif
 
 static void init_sfc_setting(unsigned int sampleRate)
@@ -145,6 +167,7 @@ void startWithRom(unsigned char *rom, unsigned int romLength, unsigned int sampl
     S9xInitSound(0, 0);//初期設定?
     #else
     S9xInitSound();
+    S9xSetPlaybackRate(36000);
     #endif
     #ifdef USE_BLARGG_APU
     S9xSetSamplesAvailableCallback(S9xSoundCallback);
@@ -168,6 +191,9 @@ void mainLoop(){
     if(!runGameFlag)return;
     S9xMainLoop();//1フレーム分実行される?
     S9xUpdateScreen();
+    #ifndef USE_BLARGG_APU
+    S9xSoundCallback();
+    #endif
 }
 
 EMSCRIPTEN_KEEPALIVE
