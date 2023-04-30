@@ -9,6 +9,9 @@
 #include "memmap.h"
 #include "gfx.h"
 #include "cheats.h"
+#include "spc7110.h"
+#include "srtc.h"
+#include "sa1.h"
 
 #include <stdio.h>
 #include <sys/time.h>
@@ -308,4 +311,167 @@ void loadSram(unsigned int sramSize, unsigned char *sram){
     if(!runGameFlag)return;
     memcpy(Memory.SRAM, sram, sramSize);
     CommonS9xReset();
+}
+
+EMSCRIPTEN_KEEPALIVE
+unsigned int getStateSaveSize(void){
+    return sizeof(unsigned int) + sizeof(CPU) + sizeof(ICPU) + sizeof(PPU) + sizeof(DMA) +
+          0x10000 + 0x20000 + 0x20000 + 0x8000 +
+#ifndef USE_BLARGG_APU
+          sizeof(APU) + sizeof(IAPU) + 0x10000 + sizeof(SoundData) +
+#else
+          SPC_SAVE_STATE_BLOCK_SIZE +
+#endif
+          sizeof(SA1) + sizeof(s7r) + sizeof(rtc_f9);
+}
+
+EMSCRIPTEN_KEEPALIVE
+unsigned char *saveState(void){
+    if(!runGameFlag)return NULL;
+    int32_t i;
+    unsigned char *data = (unsigned char*)calloc(getStateSaveSize(), sizeof(unsigned char));
+    if(!data)return NULL;
+   uint8_t* buffer = (uint8_t*)data;
+#ifdef LAGFIX
+   S9xPackStatus();
+#ifndef USE_BLARGG_APU
+   S9xAPUPackStatus();
+#endif
+#endif
+   S9xUpdateRTC();
+   S9xSRTCPreSaveState();
+   unsigned int version = 0;
+   memcpy(buffer, &version, sizeof(unsigned int));
+   buffer += sizeof(unsigned int);
+   memcpy(buffer, &CPU, sizeof(CPU));
+   buffer += sizeof(CPU);
+   memcpy(buffer, &ICPU, sizeof(ICPU));
+   buffer += sizeof(ICPU);
+   memcpy(buffer, &PPU, sizeof(PPU));
+   buffer += sizeof(PPU);
+   memcpy(buffer, &DMA, sizeof(DMA));
+   buffer += sizeof(DMA);
+   memcpy(buffer, Memory.VRAM, 0x10000);
+   buffer += 0x10000;
+   memcpy(buffer, Memory.RAM, 0x20000);
+   buffer += 0x20000;
+   memcpy(buffer, Memory.SRAM, 0x20000);
+   buffer += 0x20000;
+   memcpy(buffer, Memory.FillRAM, 0x8000);
+   buffer += 0x8000;
+#ifndef USE_BLARGG_APU
+   memcpy(buffer, &APU, sizeof(APU));
+   buffer += sizeof(APU);
+   memcpy(buffer, &IAPU, sizeof(IAPU));
+   buffer += sizeof(IAPU);
+   memcpy(buffer, IAPU.RAM, 0x10000);
+   buffer += 0x10000;
+   memcpy(buffer, &SoundData, sizeof(SoundData));
+   buffer += sizeof(SoundData);
+#else
+   S9xAPUSaveState(buffer);
+   buffer += SPC_SAVE_STATE_BLOCK_SIZE;
+#endif
+
+   SA1.Registers.PC = SA1.PC - SA1.PCBase;
+   S9xSA1PackStatus();
+
+   memcpy(buffer, &SA1, sizeof(SA1));
+   buffer += sizeof(SA1);
+   memcpy(buffer, &s7r, sizeof(s7r));
+   buffer += sizeof(s7r);
+   memcpy(buffer, &rtc_f9, sizeof(rtc_f9));
+
+   return data;
+}
+
+EMSCRIPTEN_KEEPALIVE
+bool loadState(const unsigned char* data, unsigned int size){
+    if(size != getStateSaveSize())return false;
+   const uint8_t* buffer = data;
+   unsigned int version;
+   memcpy(&version, buffer, sizeof(unsigned int));
+   if(version != 0)return false;
+   buffer += sizeof(unsigned int);
+#ifndef USE_BLARGG_APU
+   uint8_t* IAPU_RAM_current = IAPU.RAM;
+   uintptr_t IAPU_RAM_offset;
+#endif
+   uint32_t sa1_old_flags = SA1.Flags;
+   SSA1 sa1_state;
+   S9xReset();
+   memcpy(&CPU, buffer, sizeof(CPU));
+   buffer += sizeof(CPU);
+   memcpy(&ICPU, buffer, sizeof(ICPU));
+   buffer += sizeof(ICPU);
+   memcpy(&PPU, buffer, sizeof(PPU));
+   buffer += sizeof(PPU);
+   memcpy(&DMA, buffer, sizeof(DMA));
+   buffer += sizeof(DMA);
+   memcpy(Memory.VRAM, buffer, 0x10000);
+   buffer += 0x10000;
+   memcpy(Memory.RAM, buffer, 0x20000);
+   buffer += 0x20000;
+   memcpy(Memory.SRAM, buffer, 0x20000);
+   buffer += 0x20000;
+   memcpy(Memory.FillRAM, buffer, 0x8000);
+   buffer += 0x8000;
+#ifndef USE_BLARGG_APU
+   memcpy(&APU, buffer, sizeof(APU));
+   buffer += sizeof(APU);
+   memcpy(&IAPU, buffer, sizeof(IAPU));
+   buffer += sizeof(IAPU);
+   IAPU_RAM_offset = IAPU_RAM_current - IAPU.RAM;
+   IAPU.PC += IAPU_RAM_offset;
+   IAPU.DirectPage += IAPU_RAM_offset;
+   IAPU.WaitAddress1 += IAPU_RAM_offset;
+   IAPU.WaitAddress2 += IAPU_RAM_offset;
+   IAPU.RAM = IAPU_RAM_current;
+   memcpy(IAPU.RAM, buffer, 0x10000);
+   buffer += 0x10000;
+   memcpy(&SoundData, buffer, sizeof(SoundData));
+   buffer += sizeof(SoundData);
+#else
+   S9xAPULoadState(buffer);
+   buffer += SPC_SAVE_STATE_BLOCK_SIZE;
+#endif
+
+   memcpy(&sa1_state, buffer, sizeof(sa1_state));
+   buffer += sizeof(sa1_state);
+
+   /* SA1 state must be restored 'by hand' */
+   SA1.Flags               = sa1_state.Flags;
+   SA1.NMIActive           = sa1_state.NMIActive;
+   SA1.IRQActive           = sa1_state.IRQActive;
+   SA1.WaitingForInterrupt = sa1_state.WaitingForInterrupt;
+   SA1.op1                 = sa1_state.op1;
+   SA1.op2                 = sa1_state.op2;
+   SA1.arithmetic_op       = sa1_state.arithmetic_op;
+   SA1.sum                 = sa1_state.sum;
+   SA1.overflow            = sa1_state.overflow;
+   memcpy(&SA1.Registers, &sa1_state.Registers, sizeof(SA1.Registers));
+
+   memcpy(&s7r, buffer, sizeof(s7r));
+   buffer += sizeof(s7r);
+   memcpy(&rtc_f9, buffer, sizeof(rtc_f9));
+
+   S9xFixSA1AfterSnapshotLoad();
+   SA1.Flags |= sa1_old_flags & (TRACE_FLAG);
+
+   FixROMSpeed();
+   IPPU.ColorsChanged = true;
+   IPPU.OBJChanged = true;
+   CPU.InDMA = false;
+   S9xFixColourBrightness();
+#ifndef USE_BLARGG_APU
+   S9xAPUUnpackStatus();
+   S9xFixSoundAfterSnapshotLoad();
+#endif
+   ICPU.ShiftedPB = ICPU.Registers.PB << 16;
+   ICPU.ShiftedDB = ICPU.Registers.DB << 16;
+   S9xSetPCBase(ICPU.ShiftedPB + ICPU.Registers.PC);
+   S9xUnpackStatus();
+   S9xFixCycles();
+   S9xReschedule();
+   return true;
 }
