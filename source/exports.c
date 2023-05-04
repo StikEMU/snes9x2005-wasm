@@ -148,7 +148,7 @@ void startWithRom(unsigned char *rom, unsigned int romLength, unsigned int sampl
         //SRAM初期化
         if(Memory.SRAM)memset(Memory.SRAM, 0, 0x20000);
         LoadROMFromBuffer(rom, romLength);
-        CommonS9xReset();
+        S9xReset();
         return;
     }
     memset(&Settings, 0, sizeof(Settings));
@@ -185,7 +185,7 @@ void startWithRom(unsigned char *rom, unsigned int romLength, unsigned int sampl
     //グラフィック設定
     //GFX.Pitch = 512;
     //リセット
-    CommonS9xReset();
+    S9xReset();
     runGameFlag = true;
 }
 
