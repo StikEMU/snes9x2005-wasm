@@ -1,15 +1,15 @@
 name: Build and Upload Artifacts for snes9x_2005
 
 on:
-  push:
-  pull_request:
+  push:  # Triggers on any push to any branch
+  pull_request:  # Also triggers on pull requests
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4  # Fetches your repository
 
       - name: Install Emscripten
         run: |
@@ -25,7 +25,7 @@ jobs:
           emcc -O3 -s WASM=1 -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' -s ALLOW_MEMORY_GROWTH=1 source/*.c -o snes9x_2005.js
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2  # Uses v2 for stability
         with:
           name: snes9x_build_artifacts
           path: |
