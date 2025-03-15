@@ -1,0 +1,31 @@
+name: Build and Upload Artifacts for snes9x_2005
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: emscripten/emsdk
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Build with Emscripten
+        run: |
+          # Ensure we are in the correct directory
+          cd $(dirname $0)
+          # Compile C sources to JS/WASM output
+          emcc -O3 -s WASM=1 -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' -s ALLOW_MEMORY_GROWTH=1 source/*.c -o snes9x_2005.js
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: snes9x_build_artifacts
+          path: |
+            snes9x_2005.js
+            snes9x_2005.wasm
