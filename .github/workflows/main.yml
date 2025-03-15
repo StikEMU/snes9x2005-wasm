@@ -1,10 +1,8 @@
 name: Build and Upload Artifacts for snes9x_2005
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  push:  # Trigger on any push to any branch
+  pull_request:  # Also trigger on pull requests
 
 jobs:
   build:
