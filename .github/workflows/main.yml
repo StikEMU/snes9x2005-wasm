@@ -1,21 +1,27 @@
+name: Build and Upload Artifacts for snes9x_2005
+
+on:
+  push:  # Triggers on any push to any branch
+  pull_request:  # Also triggers on pull requests
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4  # Latest stable version of checkout
+
       - name: Install Emscripten
         run: |
           git clone https://github.com/emscripten-core/emsdk.git
           cd emsdk
           ./emsdk install latest
           ./emsdk activate latest
-          source ./emsdk_env.sh
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
+          echo "source $(pwd)/emsdk_env.sh" >> $GITHUB_ENV
 
       - name: Build with Emscripten
         run: |
-          source emsdk/emsdk_env.sh
+          source $GITHUB_ENV
           emcc -O3 -s WASM=1 -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' -s ALLOW_MEMORY_GROWTH=1 source/*.c -o snes9x_2005.js
 
       - name: Upload build artifacts
