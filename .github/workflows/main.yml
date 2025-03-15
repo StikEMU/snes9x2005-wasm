@@ -1,8 +1,8 @@
 name: Build and Upload Artifacts for snes9x_2005
 
 on:
-  push:  # Trigger on any push to any branch
-  pull_request:  # Also trigger on pull requests
+  push:  # triggers on any push
+  pull_request:  # also triggers on pull requests
 
 jobs:
   build:
@@ -15,13 +15,11 @@ jobs:
 
       - name: Build with Emscripten
         run: |
-          # Ensure we are in the correct directory
           cd $(dirname $0)
-          # Compile C sources to JS/WASM output
           emcc -O3 -s WASM=1 -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' -s ALLOW_MEMORY_GROWTH=1 source/*.c -o snes9x_2005.js
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: snes9x_build_artifacts
           path: |
