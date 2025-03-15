@@ -1,25 +1,25 @@
-name: Build and Upload Artifacts for snes9x_2005
-
-on:
-  push:  # triggers on any push
-  pull_request:  # also triggers on pull requests
-
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: emscripten/emsdk
     steps:
+      - name: Install Emscripten
+        run: |
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          ./emsdk install latest
+          ./emsdk activate latest
+          source ./emsdk_env.sh
+
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Build with Emscripten
         run: |
-          cd $(dirname $0)
+          source emsdk/emsdk_env.sh
           emcc -O3 -s WASM=1 -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' -s ALLOW_MEMORY_GROWTH=1 source/*.c -o snes9x_2005.js
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: snes9x_build_artifacts
           path: |
